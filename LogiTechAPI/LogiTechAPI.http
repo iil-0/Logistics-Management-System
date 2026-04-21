@@ -1,0 +1,6 @@
+@LogiTechAPI_HostAddress = http://localhost:5085
+
+GET {{LogiTechAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
