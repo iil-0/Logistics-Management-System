@@ -261,7 +261,7 @@ TOPLAM:              295 + 236 = 531₺
 ### Adım 1: Projeyi İndir
 
 ```bash
-cd C:\Users\Sude\Desktop\LogiTech
+cd LogiTech
 ```
 
 ### Adım 2: Backend'i Başlat (Terminal 1)
