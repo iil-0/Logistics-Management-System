@@ -1,0 +1,23 @@
+.gonderilerim-page { max-width:800px; margin:0 auto; padding:2rem 1.5rem; }
+.empty-state { background:#fff; border:1px solid var(--border); border-radius:var(--radius-xl); padding:4rem 2rem; text-align:center; box-shadow:var(--shadow-sm); }
+.empty-icon { font-size:3.5rem; margin-bottom:1rem; }
+.empty-state h3 { font-size:1.2rem; font-weight:700; margin-bottom:.5rem; }
+.empty-state p { color:var(--text-secondary); font-size:.9rem; }
+.gonderi-list { display:flex; flex-direction:column; gap:1rem; }
+.gonderi-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.25rem; box-shadow:var(--shadow-sm); transition:all .2s; }
+.gonderi-card:hover { box-shadow:var(--shadow-card); border-color:var(--border-accent); }
+.gonderi-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:.75rem; }
+.gonderi-takip { font-weight:700; font-size:.95rem; letter-spacing:.5px; }
+.gonderi-tarih { font-size:.78rem; color:var(--text-muted); margin-top:2px; }
+.gonderi-durum { padding:4px 12px; border-radius:50px; font-size:.78rem; font-weight:700; white-space:nowrap; }
+.status-blue { background:#eff6ff; color:#2563eb; }
+.status-orange { background:#fff7ed; color:#d97706; }
+.status-purple { background:#f5f3ff; color:#7c3aed; }
+.status-green { background:#ecfdf5; color:#059669; }
+.status-red { background:#fef2f2; color:#dc2626; }
+.gonderi-body { display:flex; justify-content:space-between; align-items:center; }
+.gonderi-info { display:flex; gap:1rem; font-size:.85rem; color:var(--text-secondary); flex-wrap:wrap; }
+.gonderi-fiyat { font-size:1.1rem; font-weight:800; color:var(--accent-blue); }
+.gonderi-actions { margin-top:.75rem; padding-top:.75rem; border-top:1px solid var(--border); }
+.btn-cancel { padding:6px 16px; border:1px solid #fecaca; background:#fef2f2; color:var(--accent-red); border-radius:var(--radius-sm); font-size:.8rem; font-weight:600; cursor:pointer; font-family:inherit; transition:all .2s; }
+.btn-cancel:hover { background:#fee2e2; border-color:#f87171; }

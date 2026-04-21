@@ -1,0 +1,24 @@
+.takip-page { max-width:650px; margin:0 auto; padding:2rem 1.5rem; }
+.takip-form { display:flex; gap:.75rem; margin-bottom:1.5rem; }
+.takip-input { flex:1; padding:14px 16px; border:1px solid var(--border); border-radius:var(--radius-md); font-size:.95rem; font-family:inherit; outline:none; background:#fff; }
+.takip-input:focus { border-color:var(--accent-blue); box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+.takip-error { background:#fef2f2; border:1px solid #fecaca; color:var(--accent-red); padding:.75rem 1rem; border-radius:var(--radius-sm); font-size:.85rem; margin-bottom:1rem; }
+.takip-result { background:#fff; border:1px solid var(--border); border-radius:var(--radius-xl); overflow:hidden; box-shadow:var(--shadow-card); }
+.takip-header-card { display:flex; justify-content:space-between; align-items:center; padding:1.5rem; background:linear-gradient(135deg,#eef2ff,#f5f3ff); border-bottom:1px solid var(--border); }
+.takip-no-big { font-size:1.2rem; font-weight:800; letter-spacing:1px; color:var(--text-primary); }
+.takip-details { padding:1.25rem 1.5rem; }
+.takip-row { display:flex; justify-content:space-between; padding:.5rem 0; border-bottom:1px solid var(--border); font-size:.9rem; }
+.takip-row:last-child { border-bottom:none; }
+.takip-row span { color:var(--text-secondary); }
+.timeline-section { padding:1.25rem 1.5rem; border-top:1px solid var(--border); }
+.timeline-section h3 { font-size:.9rem; font-weight:700; margin-bottom:1rem; color:var(--text-primary); }
+.timeline { display:flex; flex-direction:column; gap:0; position:relative; }
+.timeline-item { display:flex; gap:1rem; padding-bottom:1.25rem; position:relative; }
+.timeline-item:not(:last-child)::before { content:""; position:absolute; left:15px; top:32px; bottom:0; width:2px; background:var(--border); }
+.timeline-item.active .timeline-dot { background:var(--accent-blue); color:#fff; border-radius:50%; }
+.timeline-dot { width:32px; height:32px; border-radius:50%; background:var(--bg-primary); border:2px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; z-index:1; }
+.timeline-content { flex:1; }
+.timeline-status { font-weight:700; font-size:.85rem; color:var(--text-primary); }
+.timeline-desc { font-size:.8rem; color:var(--text-secondary); }
+.timeline-date { font-size:.75rem; color:var(--text-muted); margin-top:2px; }
+@media(max-width:768px) { .takip-form { flex-direction:column; } }
