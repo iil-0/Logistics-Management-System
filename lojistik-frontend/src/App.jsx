@@ -16,11 +16,11 @@ export default function App() {
       <main className="app-main">
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/giris" element={<GirisPage />} />
-          <Route path="/kayit" element={<KayitPage />} />
-          <Route path="/gonderi" element={<ProtectedRoute><GonderiPage /></ProtectedRoute>} />
-          <Route path="/gonderilerim" element={<ProtectedRoute><GonderilerimPage /></ProtectedRoute>} />
-          <Route path="/takip" element={<TakipPage />} />
+          <Route path="/login" element={<GirisPage />} />
+          <Route path="/register" element={<KayitPage />} />
+          <Route path="/create-shipment" element={<ProtectedRoute><GonderiPage /></ProtectedRoute>} />
+          <Route path="/my-shipments" element={<ProtectedRoute><GonderilerimPage /></ProtectedRoute>} />
+          <Route path="/track" element={<TakipPage />} />
         </Routes>
       </main>
       <Footer />
