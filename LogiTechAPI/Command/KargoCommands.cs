@@ -23,7 +23,7 @@ namespace LogiTechAPI.Command
         private readonly User _user;
         private Gonderi? _olusturulanGonderi;
 
-        public string KomutAdi => "Gönderi Oluştur";
+        public string KomutAdi => "Create Shipment";
 
         public GonderiOlusturCommand(
             PaketFactory factory,
@@ -55,11 +55,11 @@ namespace LogiTechAPI.Command
                     {
                         case "sigorta":
                             paket = new SigortaDecorator(paket);
-                            ekstraHizmetler.Add("Sigorta Güvencesi (+75₺)");
+                            ekstraHizmetler.Add("Insurance Coverage (+75₺)");
                             break;
                         case "hizliteslimat":
                             paket = new HizliTeslimatDecorator(paket);
-                            ekstraHizmetler.Add("Hızlı Teslimat (+100₺)");
+                            ekstraHizmetler.Add("Fast Delivery (+100₺)");
                             break;
                     }
                 }
@@ -77,7 +77,7 @@ namespace LogiTechAPI.Command
             var emailObserver = new EmailObserver();
             kargoTakip.Subscribe(bildirimObserver);
             kargoTakip.Subscribe(emailObserver);
-            kargoTakip.Notify("Gönderi oluşturuldu.", "Sipariş Alındı");
+            kargoTakip.Notify("Shipment created.", "Order Received");
 
             // 5. STATE: Başlangıç durumu
             var baslangicDurum = new SiparisAlindiDurum();
@@ -151,7 +151,7 @@ namespace LogiTechAPI.Command
             return new KomutSonuc
             {
                 Basarili = true,
-                Mesaj = "Gönderi başarıyla iptal edildi.",
+                Mesaj = "Shipment successfully cancelled.",
                 Gonderi = _olusturulanGonderi
             };
         }
@@ -167,7 +167,7 @@ namespace LogiTechAPI.Command
         private readonly string _takipNo;
         private string? _oncekiDurum;
 
-        public string KomutAdi => "Durum Güncelle";
+        public string KomutAdi => "Update Status";
 
         public DurumGuncelleCommand(GonderiService gonderiService, string takipNo)
         {
@@ -179,7 +179,7 @@ namespace LogiTechAPI.Command
         {
             var gonderi = _gonderiService.TakipNoIleBul(_takipNo);
             if (gonderi == null)
-                return new KomutSonuc { Basarili = false, Mesaj = "Gönderi bulunamadı." };
+                return new KomutSonuc { Basarili = false, Mesaj = "Shipment not found." };
 
             var mevcutDurum = GonderiDurumFactory.GetDurum(gonderi.Durum);
             var sonrakiDurum = mevcutDurum.SonrakiDurum();
@@ -188,7 +188,7 @@ namespace LogiTechAPI.Command
                 return new KomutSonuc
                 {
                     Basarili = false,
-                    Mesaj = $"Gönderi zaten '{gonderi.Durum}' durumunda. İleri geçiş yapılamaz."
+                    Mesaj = $"Shipment is already in '{gonderi.Durum}' status. Cannot advance further."
                 };
 
             _oncekiDurum = gonderi.Durum;
@@ -203,7 +203,7 @@ namespace LogiTechAPI.Command
             return new KomutSonuc
             {
                 Basarili = true,
-                Mesaj = $"Durum güncellendi: {_oncekiDurum} → {sonrakiDurum.DurumAdi}",
+                Mesaj = $"Status updated: {_oncekiDurum} → {sonrakiDurum.DurumAdi}",
                 Gonderi = gonderi
             };
         }
@@ -211,24 +211,24 @@ namespace LogiTechAPI.Command
         public KomutSonuc Undo()
         {
             if (_oncekiDurum == null)
-                return new KomutSonuc { Basarili = false, Mesaj = "Geri alınacak durum yok." };
+                return new KomutSonuc { Basarili = false, Mesaj = "No status to undo." };
 
             var gonderi = _gonderiService.TakipNoIleBul(_takipNo);
             if (gonderi == null)
-                return new KomutSonuc { Basarili = false, Mesaj = "Gönderi bulunamadı." };
+                return new KomutSonuc { Basarili = false, Mesaj = "Shipment not found." };
 
             gonderi.Durum = _oncekiDurum;
             gonderi.DurumGecmisi.Add(new DurumGecmisi
             {
                 Durum = _oncekiDurum,
                 Tarih = DateTime.Now,
-                Aciklama = "Durum geri alındı."
+                Aciklama = "Status reverted."
             });
 
             return new KomutSonuc
             {
                 Basarili = true,
-                Mesaj = $"Durum geri alındı: {_oncekiDurum}",
+                Mesaj = $"Status reverted to: {_oncekiDurum}",
                 Gonderi = gonderi
             };
         }
@@ -243,7 +243,7 @@ namespace LogiTechAPI.Command
         private readonly string _takipNo;
         private string? _oncekiDurum;
 
-        public string KomutAdi => "Gönderi İptal";
+        public string KomutAdi => "Cancel Shipment";
 
         public GonderiIptalCommand(GonderiService gonderiService, string takipNo)
         {
@@ -255,14 +255,14 @@ namespace LogiTechAPI.Command
         {
             var gonderi = _gonderiService.TakipNoIleBul(_takipNo);
             if (gonderi == null)
-                return new KomutSonuc { Basarili = false, Mesaj = "Gönderi bulunamadı." };
+                return new KomutSonuc { Basarili = false, Mesaj = "Shipment not found." };
 
             var mevcutDurum = GonderiDurumFactory.GetDurum(gonderi.Durum);
             if (!mevcutDurum.IptalEdilabilir())
                 return new KomutSonuc
                 {
                     Basarili = false,
-                    Mesaj = $"Gönderi '{gonderi.Durum}' durumunda olduğu için iptal edilemez."
+                    Mesaj = $"Shipment cannot be cancelled as it is in '{gonderi.Durum}' status."
                 };
 
             _oncekiDurum = gonderi.Durum;
@@ -278,7 +278,7 @@ namespace LogiTechAPI.Command
             return new KomutSonuc
             {
                 Basarili = true,
-                Mesaj = "Gönderi başarıyla iptal edildi.",
+                Mesaj = "Shipment successfully cancelled.",
                 Gonderi = gonderi
             };
         }
@@ -286,24 +286,24 @@ namespace LogiTechAPI.Command
         public KomutSonuc Undo()
         {
             if (_oncekiDurum == null)
-                return new KomutSonuc { Basarili = false, Mesaj = "Geri alınacak durum yok." };
+                return new KomutSonuc { Basarili = false, Mesaj = "No status to undo." };
 
             var gonderi = _gonderiService.TakipNoIleBul(_takipNo);
             if (gonderi == null)
-                return new KomutSonuc { Basarili = false, Mesaj = "Gönderi bulunamadı." };
+                return new KomutSonuc { Basarili = false, Mesaj = "Shipment not found." };
 
             gonderi.Durum = _oncekiDurum;
             gonderi.DurumGecmisi.Add(new DurumGecmisi
             {
                 Durum = _oncekiDurum,
                 Tarih = DateTime.Now,
-                Aciklama = "İptal geri alındı."
+                Aciklama = "Cancellation reverted."
             });
 
             return new KomutSonuc
             {
                 Basarili = true,
-                Mesaj = $"İptal geri alındı. Durum: {_oncekiDurum}",
+                Mesaj = $"Cancellation reverted. Status: {_oncekiDurum}",
                 Gonderi = gonderi
             };
         }
@@ -328,7 +328,7 @@ namespace LogiTechAPI.Command
         public KomutSonuc GeriAl()
         {
             if (_gecmis.Count == 0)
-                return new KomutSonuc { Basarili = false, Mesaj = "Geri alınacak işlem yok." };
+                return new KomutSonuc { Basarili = false, Mesaj = "No action to undo." };
 
             var sonKomut = _gecmis.Pop();
             return sonKomut.Undo();
