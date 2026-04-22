@@ -1,14 +1,14 @@
 namespace LogiTechAPI.State
 {
     /// <summary>
-    /// State Pattern — Gönderi durum arayüzü.
-    /// Her durum kendi davranışını ve geçiş kurallarını bilir.
+    /// State Pattern — Shipment status interface.
+    /// Each status knows its behavior and transition rules.
     /// </summary>
     public interface IGonderiDurum
     {
-        string DurumAdi { get; }
-        string Aciklama { get; }
-        IGonderiDurum? SonrakiDurum();
-        bool IptalEdilabilir();
+        string StatusName { get; }
+        string Description { get; }
+        IGonderiDurum? NextStatus();
+        bool IsCancellable();
     }
 }

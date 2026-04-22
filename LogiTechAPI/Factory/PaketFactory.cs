@@ -2,14 +2,17 @@ namespace LogiTechAPI.Factory
 {
     public class PaketFactory
     {
-        public IPaket CreatePaket(string paketTipi)
+        public IPaket CreatePackage(string packageType)
         {
-            return paketTipi?.ToLower() switch
+            return packageType?.ToLower() switch
             {
-                "standart" => new StandartPaket(),
-                "hassas"   => new HassasPaket(),
-                "agiryuk"  => new AgirYukPaket(),
-                _          => new StandartPaket()
+                "standard" => new StandardPackage(),
+                "fragile"  => new FragilePackage(),
+                "heavyload" => new HeavyLoadPackage(),
+                "standart" => new StandardPackage(), // Backward compatibility
+                "hassas"   => new FragilePackage(),
+                "agiryuk"  => new HeavyLoadPackage(),
+                _          => new StandardPackage()
             };
         }
     }

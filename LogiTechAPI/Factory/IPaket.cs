@@ -2,8 +2,8 @@ namespace LogiTechAPI.Factory
 {
     public interface IPaket
     {
-        string GetAciklama();
-        decimal GetFiyat();
-        string GetTip();
+        string Name { get; }
+        decimal CalculatePrice();
+        string GetDescription();
     }
 }
