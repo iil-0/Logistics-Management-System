@@ -2,23 +2,23 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import "./GonderiPage.css";
 
-const API = "http://localhost:5085/api/kargo";
+const API = "http://localhost:5085/api/cargo";
 
 const PAKET_TIPLERI = [
-  { value: "Standart", label: "📦 Standart Paket", desc: "Normal kargo - 50₺", price: "50₺" },
-  { value: "Hassas", label: "🔮 Hassas Paket", desc: "Kırılabilir ürünler - 120₺", price: "120₺" },
-  { value: "AgirYuk", label: "🏋️ Ağır Yük", desc: "50kg+ endüstriyel - 250₺", price: "250₺" },
+  { value: "Standart", label: "📦 Standard Parcel", desc: "Normal cargo - 50₺", price: "50₺" },
+  { value: "Hassas", label: "🔮 Fragile Parcel", desc: "Fragile items - 120₺", price: "120₺" },
+  { value: "AgirYuk", label: "🏋️ Heavy Load", desc: "50kg+ industrial - 250₺", price: "250₺" },
 ];
 
 const EKSTRALAR = [
-  { value: "Sigorta", label: "🛡️ Sigorta Güvencesi", price: "+75₺" },
-  { value: "HizliTeslimat", label: "⚡ Hızlı Teslimat (24 Saat)", price: "+100₺" },
+  { value: "Sigorta", label: "🛡️ Insurance Coverage", price: "+75₺" },
+  { value: "HizliTeslimat", label: "⚡ Fast Delivery (24 Hours)", price: "+100₺" },
 ];
 
 const TASIMA_YOLLARI = [
-  { value: "Havayolu", label: "✈️ Havayolu", desc: "1-2 iş günü", extra: "+%80", tag: "Ekspres" },
-  { value: "Karayolu", label: "🚛 Karayolu", desc: "3-5 iş günü", extra: "+%20", tag: "Standart" },
-  { value: "Denizyolu", label: "🚢 Denizyolu", desc: "7-14 iş günü", extra: "+%10", tag: "Ekonomik" },
+  { value: "Havayolu", label: "✈️ Airway", desc: "1-2 business days", extra: "+80%", tag: "Express" },
+  { value: "Karayolu", label: "🚛 Roadway", desc: "3-5 business days", extra: "+20%", tag: "Standard" },
+  { value: "Denizyolu", label: "🚢 Seaway", desc: "7-14 business days", extra: "+10%", tag: "Economic" },
 ];
 
 export default function GonderiPage() {
@@ -49,14 +49,14 @@ export default function GonderiPage() {
     setResult(null);
 
     try {
-      const res = await fetch(`${API}/gonderi-olustur`, {
+      const res = await fetch(`${API}/create-shipment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.mesaj || "Bir hata oluştu.");
+      if (!res.ok) throw new Error(data.mesaj || "An error occurred.");
       setResult(data);
     } catch (err) {
       setError(err.message);
@@ -71,35 +71,35 @@ export default function GonderiPage() {
         <div className="result-container">
           <div className="result-success">
             <div className="result-icon">✅</div>
-            <h2>Gönderi Başarıyla Oluşturuldu!</h2>
+            <h2>Shipment Successfully Created!</h2>
             <div className="takip-no-display">
-              <span className="takip-label">Takip Numaranız</span>
+              <span className="takip-label">Your Tracking Number</span>
               <span className="takip-value">{result.takipNo}</span>
             </div>
             <div className="result-details">
               <div className="detail-row">
-                <span>Alıcı</span>
+                <span>Receiver</span>
                 <strong>{result.aliciAd}</strong>
               </div>
               <div className="detail-row">
-                <span>Paket Tipi</span>
+                <span>Parcel Type</span>
                 <strong>{result.paketTipi}</strong>
               </div>
               <div className="detail-row">
-                <span>Taşıma Yolu</span>
+                <span>Transport Method</span>
                 <strong>{result.tasimaYolu}</strong>
               </div>
               <div className="detail-row">
-                <span>Durum</span>
+                <span>Status</span>
                 <strong>{result.durum}</strong>
               </div>
               <div className="detail-row total">
-                <span>Toplam Tutar</span>
+                <span>Total Amount</span>
                 <strong>₺{result.toplamFiyat?.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}</strong>
               </div>
             </div>
             <button className="btn-primary-lg" onClick={() => { setResult(null); setForm({ aliciAd: "", aliciAdres: "", aliciTelefon: "", aliciSehir: "", paketTipi: "Standart", ekstralar: [], tasimaYolu: "Karayolu" }); }} style={{ marginTop: "1.5rem" }}>
-              Yeni Gönderi Oluştur
+              Create New Shipment
             </button>
           </div>
         </div>
@@ -110,14 +110,14 @@ export default function GonderiPage() {
   return (
     <div className="gonderi-page">
       <div className="page-header">
-        <h1>📦 Gönderi Oluştur</h1>
-        <p>Kargo bilgilerinizi girin ve gönderinizi hemen oluşturun</p>
+        <h1>📦 Create Shipment</h1>
+        <p>Enter your cargo details and create your shipment instantly</p>
       </div>
 
       <form onSubmit={handleSubmit} className="gonderi-form">
-        {/* Gönderici Bilgileri */}
+        {/* Sender Info */}
         <div className="form-card">
-          <h3>👤 Gönderici Bilgileri</h3>
+          <h3>👤 Sender Information</h3>
           <div className="sender-info">
             <div className="info-chip">{user?.ad} {user?.soyad}</div>
             <div className="info-chip">{user?.email}</div>
@@ -125,32 +125,32 @@ export default function GonderiPage() {
           </div>
         </div>
 
-        {/* Alıcı Bilgileri */}
+        {/* Receiver Info */}
         <div className="form-card">
-          <h3>📬 Alıcı Bilgileri</h3>
+          <h3>📬 Receiver Information</h3>
           <div className="form-grid">
             <div className="form-group">
-              <label>Ad Soyad</label>
-              <input type="text" placeholder="Alıcı adı soyadı" value={form.aliciAd} onChange={update("aliciAd")} required />
+              <label>Full Name</label>
+              <input type="text" placeholder="Receiver full name" value={form.aliciAd} onChange={update("aliciAd")} required />
             </div>
             <div className="form-group">
-              <label>Telefon</label>
+              <label>Phone</label>
               <input type="tel" placeholder="05XX XXX XX XX" value={form.aliciTelefon} onChange={update("aliciTelefon")} required />
             </div>
             <div className="form-group">
-              <label>Şehir</label>
-              <input type="text" placeholder="İstanbul" value={form.aliciSehir} onChange={update("aliciSehir")} required />
+              <label>City</label>
+              <input type="text" placeholder="Istanbul" value={form.aliciSehir} onChange={update("aliciSehir")} required />
             </div>
             <div className="form-group full-width">
-              <label>Adres</label>
-              <textarea placeholder="Açık adres" value={form.aliciAdres} onChange={update("aliciAdres")} rows={2} required />
+              <label>Address</label>
+              <textarea placeholder="Full delivery address" value={form.aliciAdres} onChange={update("aliciAdres")} rows={2} required />
             </div>
           </div>
         </div>
 
-        {/* Paket Tipi */}
+        {/* Parcel Type */}
         <div className="form-card">
-          <h3>📦 Paket Tipi</h3>
+          <h3>📦 Parcel Type</h3>
           <div className="option-grid">
             {PAKET_TIPLERI.map((p) => (
               <div key={p.value}
@@ -164,9 +164,9 @@ export default function GonderiPage() {
           </div>
         </div>
 
-        {/* Ek Hizmetler */}
+        {/* Additional Services */}
         <div className="form-card">
-          <h3>✨ Ek Hizmetler</h3>
+          <h3>✨ Additional Services</h3>
           <div className="checkbox-list">
             {EKSTRALAR.map((e) => (
               <div key={e.value}
@@ -180,16 +180,16 @@ export default function GonderiPage() {
           </div>
         </div>
 
-        {/* Taşıma Yolu */}
+        {/* Transport Method */}
         <div className="form-card">
-          <h3>🚚 Taşıma Yolu</h3>
+          <h3>🚚 Transport Method</h3>
           <div className="option-grid">
             {TASIMA_YOLLARI.map((t) => (
               <div key={t.value}
                 className={`option-card ${form.tasimaYolu === t.value ? "selected" : ""}`}
                 onClick={() => setForm((f) => ({ ...f, tasimaYolu: t.value }))}>
                 <div className="option-label">{t.label}</div>
-                <div className="option-desc">{t.desc} · Ek: {t.extra}</div>
+                <div className="option-desc">{t.desc} · Extra: {t.extra}</div>
                 <div className="option-tag">{t.tag}</div>
               </div>
             ))}
@@ -199,7 +199,7 @@ export default function GonderiPage() {
         {error && <div className="auth-error">⚠️ {error}</div>}
 
         <button type="submit" className="btn-primary-lg submit-btn" disabled={loading}>
-          {loading ? "Oluşturuluyor..." : "📦 Gönderiyi Oluştur"}
+          {loading ? "Creating..." : "📦 Create Shipment"}
         </button>
       </form>
     </div>

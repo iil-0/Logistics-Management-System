@@ -7,9 +7,9 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Sayfa yüklendiğinde cookie ile oturum kontrolü
+  // Session check on load
   useEffect(() => {
-    fetch(`${API}/ben`, { credentials: "include" })
+    fetch(`${API}/me`, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setUser(data))
       .catch(() => setUser(null))
@@ -17,33 +17,33 @@ export function AuthProvider({ children }) {
   }, []);
 
   const giris = async (email, sifre) => {
-    const res = await fetch(`${API}/giris`, {
+    const res = await fetch(`${API}/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({ email, sifre }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.mesaj || "Giriş başarısız.");
+    if (!res.ok) throw new Error(data.mesaj || "Login failed.");
     setUser(data);
     return data;
   };
 
   const kayit = async (ad, soyad, email, telefon, sifre) => {
-    const res = await fetch(`${API}/kayit`, {
+    const res = await fetch(`${API}/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({ ad, soyad, email, telefon, sifre }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.mesaj || "Kayıt başarısız.");
+    if (!res.ok) throw new Error(data.mesaj || "Registration failed.");
     setUser(data);
     return data;
   };
 
   const cikis = async () => {
-    await fetch(`${API}/cikis`, {
+    await fetch(`${API}/logout`, {
       method: "POST",
       credentials: "include",
     });
