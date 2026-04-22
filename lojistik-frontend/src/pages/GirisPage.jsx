@@ -30,20 +30,19 @@ export default function GirisPage() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-header">
-          <div className="auth-icon">🔑</div>
-          <h1>Giriş Yap</h1>
-          <p>Hesabınıza giriş yaparak gönderilerinizi yönetin</p>
+          <h1>Login</h1>
+          <p>Login to your account to manage your shipments</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
           {error && <div className="auth-error">⚠️ {error}</div>}
 
           <div className="form-group">
-            <label htmlFor="email">E-posta Adresi</label>
+            <label htmlFor="email">Email Address</label>
             <input
               id="email"
               type="email"
-              placeholder="ornek@email.com"
+              placeholder="example@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -51,7 +50,7 @@ export default function GirisPage() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="sifre">Şifre</label>
+            <label htmlFor="sifre">Password</label>
             <input
               id="sifre"
               type="password"
@@ -63,13 +62,13 @@ export default function GirisPage() {
           </div>
 
           <button type="submit" className="btn-primary-lg auth-submit" disabled={loading}>
-            {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
         <div className="auth-footer">
-          Hesabınız yok mu?{" "}
-          <Link to="/kayit">Kayıt Ol</Link>
+          Don't have an account?{" "}
+          <Link to="/register">Register</Link>
         </div>
       </div>
     </div>

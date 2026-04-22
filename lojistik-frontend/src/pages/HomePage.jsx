@@ -9,7 +9,7 @@ export default function HomePage() {
   const handleTakip = (e) => {
     e.preventDefault();
     if (takipNo.trim()) {
-      navigate(`/takip?no=${takipNo.trim()}`);
+      navigate(`/track?no=${takipNo.trim()}`);
     }
   };
 
@@ -19,109 +19,109 @@ export default function HomePage() {
       <section className="hero-section">
         <div className="hero-content">
           <h1>
-            Güvenli ve Hızlı <br />
-            <span className="gradient-text">Kargo Gönderimi</span>
+            Secure and Fast <br />
+            <span className="gradient-text">Cargo Shipping</span>
           </h1>
           <p className="hero-desc">
-            Türkiye'nin her yerine güvenilir, sigortalı ve ekonomik kargo
-            hizmetleri. Gönderinizi birkaç adımda oluşturun, anında takip edin.
+            Reliable, insured, and economical cargo services throughout the country. 
+            Create your shipment in a few steps, track it instantly.
           </p>
           <div className="hero-actions">
-            <Link to="/gonderi" className="btn-primary-lg">
-              📦 Gönderi Oluştur
+            <Link to="/create-shipment" className="btn-primary-lg">
+              📦 Create Shipment
             </Link>
-            <Link to="/takip" className="btn-outline-lg">
-              🔍 Kargo Takip
+            <Link to="/track" className="btn-outline-lg">
+              🔍 Track Shipment
             </Link>
           </div>
         </div>
 
-        {/* Hızlı Takip */}
+        {/* Quick Track */}
         <div className="quick-track">
           <form onSubmit={handleTakip} className="track-form">
-            <div className="track-label">📍 Hızlı Kargo Takip</div>
+            <div className="track-label">📍 Quick Shipment Tracking</div>
             <div className="track-input-group">
               <input
                 type="text"
-                placeholder="Takip numaranızı girin (ör: LT-20260421-1001)"
+                placeholder="Enter your tracking number (e.g., LT-20260421-1001)"
                 value={takipNo}
                 onChange={(e) => setTakipNo(e.target.value)}
                 className="track-input"
               />
               <button type="submit" className="track-btn">
-                Sorgula
+                Track
               </button>
             </div>
           </form>
         </div>
       </section>
 
-      {/* Hizmetler */}
+      {/* Services */}
       <section className="services-section">
-        <h2 className="section-title">Hizmetlerimiz</h2>
+        <h2 className="section-title">Our Services</h2>
         <p className="section-desc">
-          İhtiyacınıza uygun kargo çözümleriyle yanınızdayız
+          We are with you with cargo solutions that suit your needs
         </p>
         <div className="services-grid">
           <div className="service-card">
             <div className="service-icon">✈️</div>
-            <h3>Hızlı Teslimat</h3>
+            <h3>Fast Delivery</h3>
             <p>
-              Havayolu ile 1-2 iş günü içinde gönderiniz kapınızda. Acil
-              kargolarınız için ideal çözüm.
+              Your shipment is at your door within 1-2 business days by air. 
+              Ideal solution for your urgent cargo.
             </p>
           </div>
           <div className="service-card">
             <div className="service-icon">🛡️</div>
-            <h3>Sigortalı Gönderim</h3>
+            <h3>Insured Shipping</h3>
             <p>
-              Tam hasar koruma güvencesiyle gönderiniz sigorta altında.
-              Kırılabilir ürünleriniz güvende.
+              Your shipment is under insurance with full damage protection. 
+              Your fragile products are safe.
             </p>
           </div>
           <div className="service-card">
             <div className="service-icon">🚛</div>
-            <h3>Ekonomik Kargo</h3>
+            <h3>Economical Shipping</h3>
             <p>
-              Karayolu ve denizyolu seçenekleriyle uygun fiyatlı gönderim.
-              Bütçenize uygun çözümler.
+              Affordable shipping with road and sea options. 
+              Solutions that fit your budget.
             </p>
           </div>
         </div>
       </section>
 
-      {/* İstatistikler */}
+      {/* Stats */}
       <section className="stats-section">
         <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-number">10.000+</div>
-            <div className="stat-text">Mutlu Müşteri</div>
+            <div className="stat-number">10,000+</div>
+            <div className="stat-text">Happy Customers</div>
           </div>
           <div className="stat-card">
             <div className="stat-number">81</div>
-            <div className="stat-text">İl Kapsamı</div>
+            <div className="stat-text">City Coverage</div>
           </div>
           <div className="stat-card">
-            <div className="stat-number">50.000+</div>
-            <div className="stat-text">Teslim Edilen Kargo</div>
+            <div className="stat-number">50,000+</div>
+            <div className="stat-text">Delivered Cargo</div>
           </div>
           <div className="stat-card">
-            <div className="stat-number">%99.8</div>
-            <div className="stat-text">Zamanında Teslimat</div>
+            <div className="stat-number">99.8%</div>
+            <div className="stat-text">On-time Delivery</div>
           </div>
         </div>
       </section>
 
       {/* CTA */}
       <section className="cta-section">
-        <h2>Hemen Başlayın</h2>
-        <p>Ücretsiz hesap oluşturun ve ilk gönderinizi dakikalar içinde oluşturun.</p>
+        <h2>Get Started Now</h2>
+        <p>Create a free account and create your first shipment in minutes.</p>
         <div className="cta-buttons">
-          <Link to="/kayit" className="btn-primary-lg">
-            Ücretsiz Kayıt Ol
+          <Link to="/register" className="btn-primary-lg">
+            Register for Free
           </Link>
-          <Link to="/giris" className="btn-outline-lg">
-            Giriş Yap
+          <Link to="/login" className="btn-outline-lg">
+            Login
           </Link>
         </div>
       </section>

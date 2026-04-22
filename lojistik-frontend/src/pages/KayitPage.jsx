@@ -41,56 +41,55 @@ export default function KayitPage() {
 
   return (
     <div className="auth-page">
-      <div className="auth-card" style={{ maxWidth: 480 }}>
+      <div className="auth-card">
         <div className="auth-header">
-          <div className="auth-icon">📝</div>
-          <h1>Kayıt Ol</h1>
-          <p>Ücretsiz hesap oluşturun ve kargo göndermeye başlayın</p>
+          <h1>Register</h1>
+          <p>Create a free account and start sending cargo</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
           {error && <div className="auth-error">⚠️ {error}</div>}
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div className="form-row">
             <div className="form-group">
-              <label htmlFor="ad">Ad</label>
-              <input id="ad" type="text" placeholder="Adınız" value={form.ad} onChange={update("ad")} required />
+              <label htmlFor="ad">First Name</label>
+              <input id="ad" type="text" placeholder="Your name" value={form.ad} onChange={update("ad")} required />
             </div>
             <div className="form-group">
-              <label htmlFor="soyad">Soyad</label>
-              <input id="soyad" type="text" placeholder="Soyadınız" value={form.soyad} onChange={update("soyad")} required />
+              <label htmlFor="soyad">Last Name</label>
+              <input id="soyad" type="text" placeholder="Your surname" value={form.soyad} onChange={update("soyad")} required />
             </div>
           </div>
 
           <div className="form-group">
-            <label htmlFor="email">E-posta Adresi</label>
-            <input id="email" type="email" placeholder="ornek@email.com" value={form.email} onChange={update("email")} required />
+            <label htmlFor="email">Email Address</label>
+            <input id="email" type="email" placeholder="example@email.com" value={form.email} onChange={update("email")} required />
           </div>
 
           <div className="form-group">
-            <label htmlFor="telefon">Telefon</label>
+            <label htmlFor="telefon">Phone Number</label>
             <input id="telefon" type="tel" placeholder="05XX XXX XX XX" value={form.telefon} onChange={update("telefon")} />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div className="form-row">
             <div className="form-group">
-              <label htmlFor="sifre">Şifre</label>
+              <label htmlFor="sifre">Password</label>
               <input id="sifre" type="password" placeholder="••••••••" value={form.sifre} onChange={update("sifre")} required />
             </div>
             <div className="form-group">
-              <label htmlFor="sifreTekrar">Şifre Tekrar</label>
+              <label htmlFor="sifreTekrar">Confirm Password</label>
               <input id="sifreTekrar" type="password" placeholder="••••••••" value={form.sifreTekrar} onChange={update("sifreTekrar")} required />
             </div>
           </div>
 
           <button type="submit" className="btn-primary-lg auth-submit" disabled={loading}>
-            {loading ? "Kaydediliyor..." : "Kayıt Ol"}
+            {loading ? "Registering..." : "Register"}
           </button>
         </form>
 
         <div className="auth-footer">
-          Zaten hesabınız var mı?{" "}
-          <Link to="/giris">Giriş Yap</Link>
+          Already have an account?{" "}
+          <Link to="/login">Login</Link>
         </div>
       </div>
     </div>

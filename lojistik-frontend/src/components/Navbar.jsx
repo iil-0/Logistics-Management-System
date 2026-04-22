@@ -34,29 +34,29 @@ export default function Navbar() {
               className={`nav-link ${isActive("/") ? "active" : ""}`}
               onClick={() => setMenuOpen(false)}
             >
-              Ana Sayfa
+              Home
             </Link>
             <Link
-              to="/gonderi"
-              className={`nav-link ${isActive("/gonderi") ? "active" : ""}`}
+              to="/create-shipment"
+              className={`nav-link ${isActive("/create-shipment") ? "active" : ""}`}
               onClick={() => setMenuOpen(false)}
             >
-              Gönderi Oluştur
+              Create Shipment
             </Link>
             <Link
-              to="/takip"
-              className={`nav-link ${isActive("/takip") ? "active" : ""}`}
+              to="/track"
+              className={`nav-link ${isActive("/track") ? "active" : ""}`}
               onClick={() => setMenuOpen(false)}
             >
-              Kargo Takip
+              Track Shipment
             </Link>
             {user && (
               <Link
-                to="/gonderilerim"
-                className={`nav-link ${isActive("/gonderilerim") ? "active" : ""}`}
+                to="/my-shipments"
+                className={`nav-link ${isActive("/my-shipments") ? "active" : ""}`}
                 onClick={() => setMenuOpen(false)}
               >
-                Gönderilerim
+                My Shipments
               </Link>
             )}
           </div>
@@ -66,24 +66,24 @@ export default function Navbar() {
               <div className="user-menu">
                 <span className="user-name">👤 {user.ad} {user.soyad}</span>
                 <button className="btn-logout" onClick={handleCikis}>
-                  Çıkış Yap
+                  Logout
                 </button>
               </div>
             ) : (
               <div className="auth-buttons">
                 <Link
-                  to="/giris"
+                  to="/login"
                   className="btn-login"
                   onClick={() => setMenuOpen(false)}
                 >
-                  Giriş Yap
+                  Login
                 </Link>
                 <Link
-                  to="/kayit"
+                  to="/register"
                   className="btn-register"
                   onClick={() => setMenuOpen(false)}
                 >
-                  Kayıt Ol
+                  Register
                 </Link>
               </div>
             )}
