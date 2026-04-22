@@ -19,17 +19,17 @@ namespace LogiTechAPI.Controllers
         }
 
         /// <summary>
-        /// Yeni kullanıcı kaydı
-        /// POST /api/auth/kayit
+        /// New user registration
+        /// POST /api/auth/register
         /// </summary>
-        [HttpPost("kayit")]
-        public async Task<IActionResult> Kayit([FromBody] KayitRequest request)
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] KayitRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Ad) ||
                 string.IsNullOrWhiteSpace(request.Email) ||
                 string.IsNullOrWhiteSpace(request.Sifre))
             {
-                return BadRequest(new { mesaj = "Ad, e-posta ve şifre zorunludur." });
+                return BadRequest(new { mesaj = "Name, email and password are required." });
             }
 
             var user = _userService.Kayit(
@@ -37,9 +37,9 @@ namespace LogiTechAPI.Controllers
                 request.Telefon, request.Sifre);
 
             if (user == null)
-                return BadRequest(new { mesaj = "Bu e-posta adresi zaten kayıtlı." });
+                return BadRequest(new { mesaj = "This email address is already registered." });
 
-            // Otomatik giriş yap
+            // Auto sign in
             await SignInUser(user);
 
             return Ok(new UserResponse
@@ -53,21 +53,21 @@ namespace LogiTechAPI.Controllers
         }
 
         /// <summary>
-        /// Kullanıcı girişi
-        /// POST /api/auth/giris
+        /// User login
+        /// POST /api/auth/login
         /// </summary>
-        [HttpPost("giris")]
-        public async Task<IActionResult> Giris([FromBody] GirisRequest request)
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] GirisRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Email) ||
                 string.IsNullOrWhiteSpace(request.Sifre))
             {
-                return BadRequest(new { mesaj = "E-posta ve şifre zorunludur." });
+                return BadRequest(new { mesaj = "Email and password are required." });
             }
 
             var user = _userService.Giris(request.Email, request.Sifre);
             if (user == null)
-                return Unauthorized(new { mesaj = "E-posta veya şifre hatalı." });
+                return Unauthorized(new { mesaj = "Invalid email or password." });
 
             await SignInUser(user);
 
@@ -82,33 +82,33 @@ namespace LogiTechAPI.Controllers
         }
 
         /// <summary>
-        /// Çıkış yap
-        /// POST /api/auth/cikis
+        /// Logout
+        /// POST /api/auth/logout
         /// </summary>
-        [HttpPost("cikis")]
-        public async Task<IActionResult> Cikis()
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return Ok(new { mesaj = "Çıkış yapıldı." });
+            return Ok(new { mesaj = "Logged out successfully." });
         }
 
         /// <summary>
-        /// Mevcut kullanıcı bilgisi (cookie doğrulama)
-        /// GET /api/auth/ben
+        /// Current user info (cookie validation)
+        /// GET /api/auth/me
         /// </summary>
-        [HttpGet("ben")]
-        public IActionResult MevcutKullanici()
+        [HttpGet("me")]
+        public IActionResult Me()
         {
             if (!User.Identity?.IsAuthenticated ?? true)
-                return Unauthorized(new { mesaj = "Oturum bulunamadı." });
+                return Unauthorized(new { mesaj = "Session not found." });
 
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
-                return Unauthorized(new { mesaj = "Oturum geçersiz." });
+                return Unauthorized(new { mesaj = "Invalid session." });
 
             var user = _userService.GetById(userId);
             if (user == null)
-                return Unauthorized(new { mesaj = "Kullanıcı bulunamadı." });
+                return Unauthorized(new { mesaj = "User not found." });
 
             return Ok(new UserResponse
             {

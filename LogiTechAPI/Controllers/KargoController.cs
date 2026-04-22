@@ -31,25 +31,25 @@ namespace LogiTechAPI.Controllers
         }
 
         /// <summary>
-        /// Gönderi oluştur (Command Pattern kullanır)
-        /// POST /api/kargo/gonderi-olustur
+        /// Create shipment (uses Command Pattern)
+        /// POST /api/cargo/create-shipment
         /// </summary>
         [Authorize]
-        [HttpPost("gonderi-olustur")]
+        [HttpPost("create-shipment")]
         public IActionResult GonderiOlustur([FromBody] GonderiRequest request)
         {
             if (request == null)
-                return BadRequest(new { mesaj = "Geçersiz istek verisi." });
+                return BadRequest(new { mesaj = "Invalid request data." });
 
             var userId = GetUserId();
             if (userId == null)
-                return Unauthorized(new { mesaj = "Oturum bulunamadı." });
+                return Unauthorized(new { mesaj = "Session not found." });
 
             var user = _userService.GetById(userId.Value);
             if (user == null)
-                return Unauthorized(new { mesaj = "Kullanıcı bulunamadı." });
+                return Unauthorized(new { mesaj = "User not found." });
 
-            // Command Pattern — Gönderi oluşturma komutunu çalıştır
+            // Command Pattern — Run shipment creation command
             var invoker = new KargoCommandInvoker();
             var command = new GonderiOlusturCommand(
                 _factory, _gonderiService, request, userId.Value, user);
@@ -63,16 +63,16 @@ namespace LogiTechAPI.Controllers
         }
 
         /// <summary>
-        /// Kullanıcının gönderilerini listele
-        /// GET /api/kargo/gonderilerim
+        /// List user shipments
+        /// GET /api/cargo/my-shipments
         /// </summary>
         [Authorize]
-        [HttpGet("gonderilerim")]
+        [HttpGet("my-shipments")]
         public IActionResult Gonderilerim()
         {
             var userId = GetUserId();
             if (userId == null)
-                return Unauthorized(new { mesaj = "Oturum bulunamadı." });
+                return Unauthorized(new { mesaj = "Session not found." });
 
             var gonderiler = _gonderiService.KullaniciGonderileri(userId.Value);
             var response = gonderiler.Select(MapGonderiResponse).ToList();
@@ -81,29 +81,29 @@ namespace LogiTechAPI.Controllers
         }
 
         /// <summary>
-        /// Takip numarası ile gönderi sorgula
-        /// GET /api/kargo/takip/{takipNo}
+        /// Track shipment with tracking number
+        /// GET /api/cargo/track/{trackingNo}
         /// </summary>
-        [HttpGet("takip/{takipNo}")]
-        public IActionResult Takip(string takipNo)
+        [HttpGet("track/{trackingNo}")]
+        public IActionResult Takip(string trackingNo)
         {
-            var gonderi = _gonderiService.TakipNoIleBul(takipNo);
+            var gonderi = _gonderiService.TakipNoIleBul(trackingNo);
             if (gonderi == null)
-                return NotFound(new { mesaj = "Bu takip numarasına ait gönderi bulunamadı." });
+                return NotFound(new { mesaj = "Shipment not found with this tracking number." });
 
             return Ok(MapGonderiResponse(gonderi));
         }
 
         /// <summary>
-        /// Gönderi durumunu ilerlet (Command Pattern)
-        /// POST /api/kargo/durum-guncelle/{takipNo}
+        /// Advance shipment status (Command Pattern)
+        /// POST /api/cargo/update-status/{trackingNo}
         /// </summary>
         [Authorize]
-        [HttpPost("durum-guncelle/{takipNo}")]
-        public IActionResult DurumGuncelle(string takipNo)
+        [HttpPost("update-status/{trackingNo}")]
+        public IActionResult DurumGuncelle(string trackingNo)
         {
             var invoker = new KargoCommandInvoker();
-            var command = new DurumGuncelleCommand(_gonderiService, takipNo);
+            var command = new DurumGuncelleCommand(_gonderiService, trackingNo);
             var sonuc = invoker.Calistir(command);
 
             if (!sonuc.Basarili)
@@ -113,15 +113,15 @@ namespace LogiTechAPI.Controllers
         }
 
         /// <summary>
-        /// Gönderiyi iptal et (Command Pattern)
-        /// POST /api/kargo/iptal/{takipNo}
+        /// Cancel shipment (Command Pattern)
+        /// POST /api/cargo/cancel/{trackingNo}
         /// </summary>
         [Authorize]
-        [HttpPost("iptal/{takipNo}")]
-        public IActionResult GonderiIptal(string takipNo)
+        [HttpPost("cancel/{trackingNo}")]
+        public IActionResult GonderiIptal(string trackingNo)
         {
             var invoker = new KargoCommandInvoker();
-            var command = new GonderiIptalCommand(_gonderiService, takipNo);
+            var command = new GonderiIptalCommand(_gonderiService, trackingNo);
             var sonuc = invoker.Calistir(command);
 
             if (!sonuc.Basarili)
@@ -131,17 +131,17 @@ namespace LogiTechAPI.Controllers
         }
 
         /// <summary>
-        /// API sağlık kontrolü
-        /// GET /api/kargo/saglik
+        /// API health check
+        /// GET /api/cargo/health
         /// </summary>
-        [HttpGet("saglik")]
+        [HttpGet("health")]
         public IActionResult SaglikKontrol()
         {
             return Ok(new
             {
-                durum = "Çalışıyor ✅",
-                zaman = DateTime.Now,
-                versiyon = "2.0.0"
+                status = "Healthy ✅",
+                time = DateTime.Now,
+                version = "2.0.0"
             });
         }
 
