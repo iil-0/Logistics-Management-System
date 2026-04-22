@@ -5,7 +5,7 @@ import "./GonderiPage.css";
 const API = "http://localhost:5085/api/cargo";
 
 const PAKET_TIPLERI = [
-  { value: "Standart", label: "📦 Standard Parcel", desc: "Normal cargo - 50₺", price: "50₺" },
+  { value: "Standart", label: "💫 Standard Parcel", desc: "Normal cargo - 50₺", price: "50₺" },
   { value: "Hassas", label: "🔮 Fragile Parcel", desc: "Fragile items - 120₺", price: "120₺" },
   { value: "AgirYuk", label: "🏋️ Heavy Load", desc: "50kg+ industrial - 250₺", price: "250₺" },
 ];
@@ -110,7 +110,7 @@ export default function GonderiPage() {
   return (
     <div className="gonderi-page">
       <div className="page-header">
-        <h1>📦 Create Shipment</h1>
+        <h1>💫 Create Shipment</h1>
         <p>Enter your cargo details and create your shipment instantly</p>
       </div>
 
@@ -150,7 +150,7 @@ export default function GonderiPage() {
 
         {/* Parcel Type */}
         <div className="form-card">
-          <h3>📦 Parcel Type</h3>
+          <h3>💫 Parcel Type</h3>
           <div className="option-grid">
             {PAKET_TIPLERI.map((p) => (
               <div key={p.value}
@@ -199,7 +199,7 @@ export default function GonderiPage() {
         {error && <div className="auth-error">⚠️ {error}</div>}
 
         <button type="submit" className="btn-primary-lg submit-btn" disabled={loading}>
-          {loading ? "Creating..." : "📦 Create Shipment"}
+          {loading ? "Creating..." : "💫 Create Shipment"}
         </button>
       </form>
     </div>

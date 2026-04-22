@@ -19,7 +19,7 @@ export default function Navbar() {
     <nav className="navbar">
       <div className="navbar-inner">
         <Link to="/" className="navbar-brand" onClick={() => setMenuOpen(false)}>
-          <div className="brand-icon">📦</div>
+          <div className="brand-icon">💫</div>
           <span className="brand-text">LogiTech</span>
         </Link>
 

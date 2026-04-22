@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -21,6 +21,13 @@ export default function App() {
           <Route path="/create-shipment" element={<ProtectedRoute><GonderiPage /></ProtectedRoute>} />
           <Route path="/my-shipments" element={<ProtectedRoute><GonderilerimPage /></ProtectedRoute>} />
           <Route path="/track" element={<TakipPage />} />
+
+          {/* Redirect old Turkish routes to new English routes */}
+          <Route path="/giris" element={<Navigate to="/login" replace />} />
+          <Route path="/kayit" element={<Navigate to="/register" replace />} />
+          <Route path="/gonderi" element={<Navigate to="/create-shipment" replace />} />
+          <Route path="/gonderilerim" element={<Navigate to="/my-shipments" replace />} />
+          <Route path="/takip" element={<Navigate to="/track" replace />} />
         </Routes>
       </main>
       <Footer />

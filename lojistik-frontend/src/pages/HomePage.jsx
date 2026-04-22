@@ -28,7 +28,7 @@ export default function HomePage() {
           </p>
           <div className="hero-actions">
             <Link to="/create-shipment" className="btn-primary-lg">
-              📦 Create Shipment
+              💫 Create Shipment
             </Link>
             <Link to="/track" className="btn-outline-lg">
               🔍 Track Shipment

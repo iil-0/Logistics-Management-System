@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="footer-grid">
           <div className="footer-col">
             <div className="footer-brand">
-              <span className="footer-logo">📦</span>
+              <span className="footer-logo">💫</span>
               <span className="footer-brand-text">LogiTech</span>
             </div>
             <p className="footer-desc">

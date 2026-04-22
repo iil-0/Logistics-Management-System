@@ -2,7 +2,7 @@
 
 /* ─── Hero ─────────────────────────────────────────────────── */
 .hero-section {
-  background: linear-gradient(160deg, #eef2ff 0%, #f5f7fa 50%, #eef2ff 100%);
+  background: linear-gradient(160deg, #eff6ff 0%, #f8fafc 50%, #eff6ff 100%);
   padding: 4rem 1.5rem 3rem;
   text-align: center;
 }
@@ -54,7 +54,7 @@
 .btn-primary-lg:hover {
   opacity: 0.9;
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 8px 30px rgba(59, 130, 246, 0.3);
   text-decoration: none;
 }
 
@@ -118,7 +118,7 @@
 
 .track-input:focus {
   border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .track-btn {
@@ -198,7 +198,7 @@
 
 /* ─── Stats ─────────────────────────────────────────────────── */
 .stats-section {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  background: linear-gradient(135deg, #1E3A8A 0%, #0F172A 100%);
   padding: 3rem 1.5rem;
 }
 

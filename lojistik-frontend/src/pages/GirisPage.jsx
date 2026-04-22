@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./GirisPage.css";
 
 export default function GirisPage() {
   const { giris } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectPath = searchParams.get("redirect");
   const [email, setEmail] = useState("");
   const [sifre, setSifre] = useState("");
   const [error, setError] = useState("");
@@ -18,7 +20,7 @@ export default function GirisPage() {
 
     try {
       await giris(email, sifre);
-      navigate("/");
+      navigate(redirectPath || "/");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -35,7 +37,10 @@ export default function GirisPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          {error && <div className="auth-error">⚠️ {error}</div>}
+          {redirectPath && (
+            <div className="auth-warning">You must log in first to access this page.</div>
+          )}
+          {error && <div className="auth-error">{error}</div>}
 
           <div className="form-group">
             <label htmlFor="email">Email Address</label>

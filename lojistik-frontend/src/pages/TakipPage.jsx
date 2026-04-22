@@ -36,7 +36,7 @@ export default function TakipPage() {
       case "Order Received":
       case "Sipariş Alındı": return "📋";
       case "Preparing":
-      case "Hazırlanıyor": return "📦";
+      case "Hazırlanıyor": return "💫";
       case "On the Way":
       case "Yolda": return "🚚";
       case "Delivered":

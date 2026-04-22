@@ -67,7 +67,7 @@ export default function GonderilerimPage() {
           <h3>You haven't created any shipments yet</h3>
           <p>Click the button below to create your first shipment.</p>
           <Link to="/create-shipment" className="btn-primary-lg" style={{ marginTop: "1rem" }}>
-            📦 Create Shipment
+            💫 Create Shipment
           </Link>
         </div>
       ) : (
@@ -90,7 +90,7 @@ export default function GonderilerimPage() {
               <div className="gonderi-body">
                 <div className="gonderi-info">
                   <span>📬 {g.aliciAd}</span>
-                  <span>📦 {g.paketTipi}</span>
+                  <span>💫 {g.paketTipi}</span>
                   <span>🚚 {g.tasimaYolu}</span>
                 </div>
                 <div className="gonderi-fiyat">
