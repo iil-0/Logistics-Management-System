@@ -27,7 +27,8 @@
 }
 
 .form-card {
-  background: #fff;
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
@@ -215,7 +216,8 @@
 }
 
 .result-success {
-  background: #fff;
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   padding: 2.5rem;
