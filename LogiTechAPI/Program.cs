@@ -1,14 +1,20 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using LogiTechAPI.Factory;
 using LogiTechAPI.Services;
+using Microsoft.EntityFrameworkCore;
+using LogiTechAPI.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ─── Servisler ────────────────────────────────────────────────────────────────
+// ─── Services ────────────────────────────────────────────────────────────────
 builder.Services.AddControllers();
 builder.Services.AddSingleton<PaketFactory>();
-builder.Services.AddSingleton<UserService>();
-builder.Services.AddSingleton<GonderiService>();
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<GonderiService>();
+
+// PostgreSQL DbContext Registration
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // ─── Cookie Authentication ───────────────────────────────────────────────────
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
