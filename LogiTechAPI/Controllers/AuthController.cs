@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
 using LogiTechAPI.Services;
-using LogiTechAPI.DTOs;
+using LogiTechAPI.DTOs.Requests;
+using LogiTechAPI.DTOs.Responses;
 
 namespace LogiTechAPI.Controllers
 {
@@ -23,21 +24,21 @@ namespace LogiTechAPI.Controllers
         /// POST /api/auth/register
         /// </summary>
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] KayitRequest request)
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Ad) ||
+            if (string.IsNullOrWhiteSpace(request.FirstName) ||
                 string.IsNullOrWhiteSpace(request.Email) ||
-                string.IsNullOrWhiteSpace(request.Sifre))
+                string.IsNullOrWhiteSpace(request.Password))
             {
-                return BadRequest(new { mesaj = "Name, email and password are required." });
+                return BadRequest(new { message = "First name, email and password are required." });
             }
 
-            var user = _userService.Kayit(
-                request.Ad, request.Soyad, request.Email,
-                request.Telefon, request.Sifre);
+            var user = await _userService.Register(
+                request.FirstName, request.LastName, request.Email,
+                request.Phone, request.Password);
 
             if (user == null)
-                return BadRequest(new { mesaj = "This email address is already registered." });
+                return BadRequest(new { message = "This email address is already registered." });
 
             // Auto sign in
             await SignInUser(user);
@@ -45,10 +46,10 @@ namespace LogiTechAPI.Controllers
             return Ok(new UserResponse
             {
                 Id = user.Id,
-                Ad = user.Ad,
-                Soyad = user.Soyad,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
                 Email = user.Email,
-                Telefon = user.Telefon
+                Phone = user.Phone
             });
         }
 
@@ -57,27 +58,27 @@ namespace LogiTechAPI.Controllers
         /// POST /api/auth/login
         /// </summary>
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] GirisRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Email) ||
-                string.IsNullOrWhiteSpace(request.Sifre))
+                string.IsNullOrWhiteSpace(request.Password))
             {
-                return BadRequest(new { mesaj = "Email and password are required." });
+                return BadRequest(new { message = "Email and password are required." });
             }
 
-            var user = _userService.Giris(request.Email, request.Sifre);
+            var user = await _userService.Login(request.Email, request.Password);
             if (user == null)
-                return Unauthorized(new { mesaj = "Invalid email or password." });
+                return Unauthorized(new { message = "Invalid email or password." });
 
             await SignInUser(user);
 
             return Ok(new UserResponse
             {
                 Id = user.Id,
-                Ad = user.Ad,
-                Soyad = user.Soyad,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
                 Email = user.Email,
-                Telefon = user.Telefon
+                Phone = user.Phone
             });
         }
 
@@ -89,7 +90,7 @@ namespace LogiTechAPI.Controllers
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return Ok(new { mesaj = "Logged out successfully." });
+            return Ok(new { message = "Logged out successfully." });
         }
 
         /// <summary>
@@ -97,26 +98,26 @@ namespace LogiTechAPI.Controllers
         /// GET /api/auth/me
         /// </summary>
         [HttpGet("me")]
-        public IActionResult Me()
+        public async Task<IActionResult> Me()
         {
             if (!User.Identity?.IsAuthenticated ?? true)
-                return Unauthorized(new { mesaj = "Session not found." });
+                return Unauthorized(new { message = "Session not found." });
 
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
-                return Unauthorized(new { mesaj = "Invalid session." });
+                return Unauthorized(new { message = "Invalid session." });
 
-            var user = _userService.GetById(userId);
+            var user = await _userService.GetById(userId);
             if (user == null)
-                return Unauthorized(new { mesaj = "User not found." });
+                return Unauthorized(new { message = "User not found." });
 
             return Ok(new UserResponse
             {
                 Id = user.Id,
-                Ad = user.Ad,
-                Soyad = user.Soyad,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
                 Email = user.Email,
-                Telefon = user.Telefon
+                Phone = user.Phone
             });
         }
 
@@ -125,7 +126,7 @@ namespace LogiTechAPI.Controllers
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, $"{user.Ad} {user.Soyad}"),
+                new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
                 new Claim(ClaimTypes.Email, user.Email)
             };
 

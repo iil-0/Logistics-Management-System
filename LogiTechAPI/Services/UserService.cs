@@ -1,51 +1,53 @@
-using System.Collections.Concurrent;
+using LogiTechAPI.Data;
+using LogiTechAPI.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
-using LogiTechAPI.Models;
 
 namespace LogiTechAPI.Services
 {
     public class UserService
     {
-        private readonly ConcurrentDictionary<int, User> _users = new();
-        private int _nextId = 1;
+        private readonly AppDbContext _context;
 
-        public User? Kayit(string ad, string soyad, string email, string telefon, string sifre)
+        public UserService(AppDbContext context)
         {
-            // E-posta zaten kayıtlı mı?
-            if (_users.Values.Any(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase)))
+            _context = context;
+        }
+
+        public async Task<User?> Register(string firstName, string lastName, string email, string phone, string password)
+        {
+            // Email check
+            if (await _context.Users.AnyAsync(u => u.Email == email))
                 return null;
 
             var user = new User
             {
-                Id = _nextId++,
-                Ad = ad,
-                Soyad = soyad,
+                FirstName = firstName,
+                LastName = lastName,
                 Email = email,
-                Telefon = telefon,
-                PasswordHash = HashPassword(sifre),
-                KayitTarihi = DateTime.Now
+                Phone = phone,
+                PasswordHash = HashPassword(password),
+                CreatedAt = DateTime.UtcNow
             };
 
-            _users.TryAdd(user.Id, user);
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
             return user;
         }
 
-        public User? Giris(string email, string sifre)
+        public async Task<User?> Login(string email, string password)
         {
-            var user = _users.Values.FirstOrDefault(u =>
-                u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
-
-            if (user == null) return null;
-            if (user.PasswordHash != HashPassword(sifre)) return null;
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null || user.PasswordHash != HashPassword(password))
+                return null;
 
             return user;
         }
 
-        public User? GetById(int id)
+        public async Task<User?> GetById(int id)
         {
-            _users.TryGetValue(id, out var user);
-            return user;
+            return await _context.Users.FindAsync(id);
         }
 
         private static string HashPassword(string password)

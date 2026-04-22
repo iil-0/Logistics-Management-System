@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using LogiTechAPI.Factory;
 using LogiTechAPI.Services;
-using LogiTechAPI.DTOs;
+using LogiTechAPI.DTOs.Requests;
+using LogiTechAPI.DTOs.Responses;
 using LogiTechAPI.Command;
 using LogiTechAPI.State;
+using LogiTechAPI.Models;
 
 namespace LogiTechAPI.Controllers
 {
@@ -36,30 +38,30 @@ namespace LogiTechAPI.Controllers
         /// </summary>
         [Authorize]
         [HttpPost("create-shipment")]
-        public IActionResult GonderiOlustur([FromBody] GonderiRequest request)
+        public async Task<IActionResult> CreateShipment([FromBody] ShipmentRequest request)
         {
             if (request == null)
-                return BadRequest(new { mesaj = "Invalid request data." });
+                return BadRequest(new { message = "Invalid request data." });
 
             var userId = GetUserId();
             if (userId == null)
-                return Unauthorized(new { mesaj = "Session not found." });
+                return Unauthorized(new { message = "Session not found." });
 
-            var user = _userService.GetById(userId.Value);
+            var user = await _userService.GetById(userId.Value);
             if (user == null)
-                return Unauthorized(new { mesaj = "User not found." });
+                return Unauthorized(new { message = "User not found." });
 
             // Command Pattern — Run shipment creation command
             var invoker = new KargoCommandInvoker();
             var command = new GonderiOlusturCommand(
                 _factory, _gonderiService, request, userId.Value, user);
 
-            var sonuc = invoker.Calistir(command);
+            var result = await invoker.ExecuteCommand(command);
 
-            if (!sonuc.Basarili)
-                return BadRequest(new { mesaj = sonuc.Mesaj });
+            if (!result.Basarili)
+                return BadRequest(new { message = result.Mesaj });
 
-            return Ok(MapGonderiResponse(sonuc.Gonderi!));
+            return Ok(MapShipmentResponse((Gonderi)result.Gonderi!));
         }
 
         /// <summary>
@@ -68,14 +70,14 @@ namespace LogiTechAPI.Controllers
         /// </summary>
         [Authorize]
         [HttpGet("my-shipments")]
-        public IActionResult Gonderilerim()
+        public async Task<IActionResult> MyShipments()
         {
             var userId = GetUserId();
             if (userId == null)
-                return Unauthorized(new { mesaj = "Session not found." });
+                return Unauthorized(new { message = "Session not found." });
 
-            var gonderiler = _gonderiService.KullaniciGonderileri(userId.Value);
-            var response = gonderiler.Select(MapGonderiResponse).ToList();
+            var shipments = await _gonderiService.GetUserShipments(userId.Value);
+            var response = shipments.Select(MapShipmentResponse).ToList();
 
             return Ok(response);
         }
@@ -85,13 +87,13 @@ namespace LogiTechAPI.Controllers
         /// GET /api/cargo/track/{trackingNo}
         /// </summary>
         [HttpGet("track/{trackingNo}")]
-        public IActionResult Takip(string trackingNo)
+        public async Task<IActionResult> Track(string trackingNo)
         {
-            var gonderi = _gonderiService.TakipNoIleBul(trackingNo);
-            if (gonderi == null)
-                return NotFound(new { mesaj = "Shipment not found with this tracking number." });
+            var shipment = await _gonderiService.GetByTrackingNo(trackingNo);
+            if (shipment == null)
+                return NotFound(new { message = "Shipment not found with this tracking number." });
 
-            return Ok(MapGonderiResponse(gonderi));
+            return Ok(MapShipmentResponse(shipment));
         }
 
         /// <summary>
@@ -100,16 +102,17 @@ namespace LogiTechAPI.Controllers
         /// </summary>
         [Authorize]
         [HttpPost("update-status/{trackingNo}")]
-        public IActionResult DurumGuncelle(string trackingNo)
+        public async Task<IActionResult> UpdateStatus(string trackingNo, [FromBody] string nextStatus)
         {
             var invoker = new KargoCommandInvoker();
-            var command = new DurumGuncelleCommand(_gonderiService, trackingNo);
-            var sonuc = invoker.Calistir(command);
+            var command = new DurumGuncelleCommand(_gonderiService, trackingNo, nextStatus);
+            var result = await invoker.ExecuteCommand(command);
 
-            if (!sonuc.Basarili)
-                return BadRequest(new { mesaj = sonuc.Mesaj });
+            if (!result.Basarili)
+                return BadRequest(new { message = result.Mesaj });
 
-            return Ok(MapGonderiResponse(sonuc.Gonderi!));
+            var shipment = await _gonderiService.GetByTrackingNo(trackingNo);
+            return Ok(MapShipmentResponse(shipment!));
         }
 
         /// <summary>
@@ -118,16 +121,16 @@ namespace LogiTechAPI.Controllers
         /// </summary>
         [Authorize]
         [HttpPost("cancel/{trackingNo}")]
-        public IActionResult GonderiIptal(string trackingNo)
+        public async Task<IActionResult> CancelShipment(string trackingNo)
         {
             var invoker = new KargoCommandInvoker();
             var command = new GonderiIptalCommand(_gonderiService, trackingNo);
-            var sonuc = invoker.Calistir(command);
+            var result = await invoker.ExecuteCommand(command);
 
-            if (!sonuc.Basarili)
-                return BadRequest(new { mesaj = sonuc.Mesaj });
+            if (!result.Basarili)
+                return BadRequest(new { message = result.Mesaj });
 
-            return Ok(MapGonderiResponse(sonuc.Gonderi!));
+            return Ok(new { message = result.Mesaj });
         }
 
         /// <summary>
@@ -135,17 +138,17 @@ namespace LogiTechAPI.Controllers
         /// GET /api/cargo/health
         /// </summary>
         [HttpGet("health")]
-        public IActionResult SaglikKontrol()
+        public IActionResult HealthCheck()
         {
             return Ok(new
             {
                 status = "Healthy ✅",
                 time = DateTime.Now,
-                version = "2.0.0"
+                version = "3.0.0"
             });
         }
 
-        // ─── Yardımcı Metotlar ────────────────────────────────────────────────
+        // ─── Helper Methods ───────────────────────────────────────────────────
 
         private int? GetUserId()
         {
@@ -154,30 +157,30 @@ namespace LogiTechAPI.Controllers
             return null;
         }
 
-        private static GonderiResponse MapGonderiResponse(Models.Gonderi g)
+        private static ShipmentResponse MapShipmentResponse(Gonderi g)
         {
-            var mevcutDurum = GonderiDurumFactory.GetDurum(g.Durum);
-            return new GonderiResponse
+            var currentStatus = GonderiDurumFactory.GetStatus(g.Status);
+            return new ShipmentResponse
             {
                 Id = g.Id,
-                TakipNo = g.TakipNo,
-                GondericiAd = g.GondericiAd,
-                AliciAd = g.AliciAd,
-                AliciAdres = g.AliciAdres,
-                AliciSehir = g.AliciSehir,
-                PaketTipi = g.PaketTipi,
-                Ekstralar = g.Ekstralar,
-                TasimaYolu = g.TasimaYolu,
-                ToplamFiyat = g.ToplamFiyat,
-                Durum = g.Durum,
-                IptalEdilabilir = mevcutDurum.IptalEdilabilir(),
-                DurumGecmisi = g.DurumGecmisi.Select(d => new DurumGecmisiResponse
+                TrackingNo = g.TrackingNo,
+                SenderName = g.SenderName,
+                ReceiverName = g.ReceiverName,
+                ReceiverAddress = g.ReceiverAddress,
+                ReceiverCity = g.ReceiverCity,
+                PackageType = g.PackageType,
+                Extras = g.Extras,
+                TransportMethod = g.TransportMethod,
+                TotalPrice = g.TotalPrice,
+                Status = g.Status,
+                IsCancellable = currentStatus.IsCancellable(),
+                StatusHistory = g.StatusHistory.Select(d => new StatusHistoryResponse
                 {
-                    Durum = d.Durum,
-                    Tarih = d.Tarih,
-                    Aciklama = d.Aciklama
+                    Status = d.Status,
+                    Date = d.Date,
+                    Description = d.Message
                 }).ToList(),
-                OlusturulmaTarihi = g.OlusturulmaTarihi
+                CreatedAt = g.CreatedAt
             };
         }
     }

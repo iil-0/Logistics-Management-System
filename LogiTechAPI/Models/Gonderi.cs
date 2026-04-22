@@ -6,37 +6,38 @@ namespace LogiTechAPI.Models
     {
         public int Id { get; set; }
         public int UserId { get; set; }
-        public string TakipNo { get; set; } = string.Empty;
+        public string TrackingNo { get; set; } = string.Empty;
 
-        // Gönderici bilgileri (User'dan otomatik dolar)
-        public string GondericiAd { get; set; } = string.Empty;
-        public string GondericiEmail { get; set; } = string.Empty;
-        public string GondericiTelefon { get; set; } = string.Empty;
+        // Sender information
+        public string SenderName { get; set; } = string.Empty;
+        public string SenderEmail { get; set; } = string.Empty;
+        public string SenderPhone { get; set; } = string.Empty;
 
-        // Alıcı bilgileri
-        public string AliciAd { get; set; } = string.Empty;
-        public string AliciAdres { get; set; } = string.Empty;
-        public string AliciTelefon { get; set; } = string.Empty;
-        public string AliciSehir { get; set; } = string.Empty;
+        // Receiver information
+        public string ReceiverName { get; set; } = string.Empty;
+        public string ReceiverAddress { get; set; } = string.Empty;
+        public string ReceiverPhone { get; set; } = string.Empty;
+        public string ReceiverCity { get; set; } = string.Empty;
 
-        // Kargo detayları
-        public string PaketTipi { get; set; } = string.Empty;
-        public List<string> Ekstralar { get; set; } = new();
-        public string TasimaYolu { get; set; } = string.Empty;
-        public decimal ToplamFiyat { get; set; }
-        public string Aciklama { get; set; } = string.Empty;
+        // Shipment details
+        public string PackageType { get; set; } = string.Empty;
+        public List<string> Extras { get; set; } = new();
+        public string TransportMethod { get; set; } = string.Empty;
+        public decimal TotalPrice { get; set; }
+        public string Notes { get; set; } = string.Empty;
 
-        // State Pattern — Durum yönetimi
-        public string Durum { get; set; } = "Sipariş Alındı";
-        public List<DurumGecmisi> DurumGecmisi { get; set; } = new();
+        // Status management
+        public string Status { get; set; } = "Order Received";
+        public List<StatusHistory> StatusHistory { get; set; } = new();
 
-        public DateTime OlusturulmaTarihi { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 
-    public class DurumGecmisi
+    public class StatusHistory
     {
-        public string Durum { get; set; } = string.Empty;
-        public DateTime Tarih { get; set; } = DateTime.Now;
-        public string Aciklama { get; set; } = string.Empty;
+        public int Id { get; set; } // Added Primary Key
+        public string Status { get; set; } = string.Empty;
+        public DateTime Date { get; set; } = DateTime.Now;
+        public string Message { get; set; } = string.Empty;
     }
 }
