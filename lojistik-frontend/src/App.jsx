@@ -8,6 +8,7 @@ import KayitPage from "./pages/KayitPage";
 import GonderiPage from "./pages/GonderiPage";
 import GonderilerimPage from "./pages/GonderilerimPage";
 import TakipPage from "./pages/TakipPage";
+import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
           <Route path="/create-shipment" element={<ProtectedRoute><GonderiPage /></ProtectedRoute>} />
           <Route path="/my-shipments" element={<ProtectedRoute><GonderilerimPage /></ProtectedRoute>} />
           <Route path="/track" element={<TakipPage />} />
+          <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
 
           {/* Redirect old Turkish routes to new English routes */}
           <Route path="/giris" element={<Navigate to="/login" replace />} />

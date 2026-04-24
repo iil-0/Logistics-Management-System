@@ -59,12 +59,21 @@ export default function Navbar() {
                 My Shipments
               </Link>
             )}
+            {user && user.role === "Admin" && (
+              <Link
+                to="/admin"
+                className={`nav-link ${isActive("/admin") ? "active" : ""}`}
+                onClick={() => setMenuOpen(false)}
+              >
+                Admin Dashboard
+              </Link>
+            )}
           </div>
 
           <div className="nav-auth">
             {user ? (
               <div className="user-menu">
-                <span className="user-name">👤 {user.ad} {user.soyad}</span>
+                <span className="user-name">👤 {user.firstName} {user.lastName}</span>
                 <button className="btn-logout" onClick={handleCikis}>
                   Logout
                 </button>
