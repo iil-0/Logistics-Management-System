@@ -22,7 +22,7 @@ export default function App() {
           <Route path="/create-shipment" element={<ProtectedRoute><GonderiPage /></ProtectedRoute>} />
           <Route path="/my-shipments" element={<ProtectedRoute><GonderilerimPage /></ProtectedRoute>} />
           <Route path="/track" element={<TakipPage />} />
-          <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute requireAdmin={true}><AdminDashboard /></ProtectedRoute>} />
 
           {/* Redirect old Turkish routes to new English routes */}
           <Route path="/giris" element={<Navigate to="/login" replace />} />
