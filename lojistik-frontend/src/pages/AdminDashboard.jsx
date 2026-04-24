@@ -34,29 +34,35 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleNextStatus = async (trackingNo, currentStatus) => {
-    const currentIndex = STATUS_ORDER.indexOf(currentStatus);
-    if (currentIndex === -1 || currentIndex === STATUS_ORDER.length - 1) return;
-
-    const nextStatus = STATUS_ORDER[currentIndex + 1];
-
+  const handleStatusChange = async (trackingNo, targetStatus) => {
     try {
       const res = await fetch(`${API}/update-status/${trackingNo}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(nextStatus),
+        body: JSON.stringify(targetStatus),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Update failed.");
 
-      // Update local state
       setShipments((prev) =>
         prev.map((s) => (s.trackingNo === trackingNo ? data : s))
       );
     } catch (err) {
       alert(err.message);
     }
+  };
+
+  const handleNextStatus = (trackingNo, currentStatus) => {
+    const currentIndex = STATUS_ORDER.indexOf(currentStatus);
+    if (currentIndex === -1 || currentIndex === STATUS_ORDER.length - 1) return;
+    handleStatusChange(trackingNo, STATUS_ORDER[currentIndex + 1]);
+  };
+
+  const handlePrevStatus = (trackingNo, currentStatus) => {
+    const currentIndex = STATUS_ORDER.indexOf(currentStatus);
+    if (currentIndex <= 0) return;
+    handleStatusChange(trackingNo, STATUS_ORDER[currentIndex - 1]);
   };
 
   const statusColor = (status) => {
@@ -127,14 +133,25 @@ export default function AdminDashboard() {
                   </span>
                 </td>
                 <td>
-                  {s.status !== "Delivered" && s.status !== "Cancelled" && (
-                    <button 
-                      className="btn-next"
-                      onClick={() => handleNextStatus(s.trackingNo, s.status)}
-                    >
-                      Next Status ➔
-                    </button>
-                  )}
+                  <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                    {s.status !== "Cancelled" && STATUS_ORDER.indexOf(s.status) > 0 && (
+                      <button 
+                        className="btn-next"
+                        style={{ backgroundColor: "#6b7280" }}
+                        onClick={() => handlePrevStatus(s.trackingNo, s.status)}
+                      >
+                        🡄 Prev
+                      </button>
+                    )}
+                    {s.status !== "Delivered" && s.status !== "Cancelled" && (
+                      <button 
+                        className="btn-next"
+                        onClick={() => handleNextStatus(s.trackingNo, s.status)}
+                      >
+                        Next 🡆
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
