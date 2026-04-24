@@ -30,14 +30,14 @@ namespace LogiTechAPI.Models
         public string Status { get; set; } = "Order Received";
         public List<StatusHistory> StatusHistory { get; set; } = new();
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 
     public class StatusHistory
     {
         public int Id { get; set; } // Added Primary Key
         public string Status { get; set; } = string.Empty;
-        public DateTime Date { get; set; } = DateTime.Now;
+        public DateTime Date { get; set; } = DateTime.UtcNow;
         public string Message { get; set; } = string.Empty;
     }
 }

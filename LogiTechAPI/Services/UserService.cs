@@ -23,10 +23,10 @@ namespace LogiTechAPI.Services
 
             var user = new User
             {
-                FirstName = firstName,
-                LastName = lastName,
-                Email = email,
-                Phone = phone,
+                FirstName = firstName ?? string.Empty,
+                LastName = lastName ?? string.Empty,
+                Email = email ?? string.Empty,
+                Phone = phone ?? string.Empty,
                 PasswordHash = HashPassword(password),
                 CreatedAt = DateTime.UtcNow
             };

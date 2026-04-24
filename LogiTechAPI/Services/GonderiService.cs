@@ -22,6 +22,12 @@ namespace LogiTechAPI.Services
             await _context.SaveChangesAsync();
         }
 
+        public async Task UpdateShipment(Gonderi shipment)
+        {
+            _context.Shipments.Update(shipment);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task<Gonderi?> GetByTrackingNo(string trackingNo)
         {
             return await _context.Shipments
@@ -43,6 +49,14 @@ namespace LogiTechAPI.Services
         {
             return await _context.Shipments
                 .Where(g => g.UserId == userId)
+                .Include(g => g.StatusHistory)
+                .OrderByDescending(g => g.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<List<Gonderi>> GetAllShipments()
+        {
+            return await _context.Shipments
                 .Include(g => g.StatusHistory)
                 .OrderByDescending(g => g.CreatedAt)
                 .ToListAsync();
