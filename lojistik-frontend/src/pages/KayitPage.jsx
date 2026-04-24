@@ -1,11 +1,16 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./GirisPage.css";
 
 export default function KayitPage() {
-  const { kayit } = useAuth();
+  const { user, kayit } = useAuth();
   const navigate = useNavigate();
+  
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
+
   const [form, setForm] = useState({
     ad: "", soyad: "", email: "", telefon: "", sifre: "", sifreTekrar: "",
   });

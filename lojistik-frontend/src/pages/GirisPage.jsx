@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./GirisPage.css";
 
 export default function GirisPage() {
-  const { giris } = useAuth();
+  const { giris, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const redirectPath = location.state?.redirectedFrom;
@@ -12,6 +12,10 @@ export default function GirisPage() {
   const [sifre, setSifre] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
