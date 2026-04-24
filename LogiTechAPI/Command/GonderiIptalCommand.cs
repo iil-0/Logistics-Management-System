@@ -22,11 +22,32 @@ namespace LogiTechAPI.Command
             var shipment = await _gonderiService.GetByTrackingNo(_trackingNo);
             if (shipment == null) return new KomutSonuc { Basarili = false, Mesaj = "Shipment not found!" };
 
-            if (shipment.Status != "Order Received")
-                return new KomutSonuc { Basarili = false, Mesaj = "Only shipments in 'Order Received' state can be cancelled." };
+            Console.WriteLine($"[DEBUG] Cancelling shipment {_trackingNo}. Current status in DB: '{shipment.Status}'");
+
+            if (!string.Equals(shipment.Status, "Order Received", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine($"[DEBUG] Cancellation rejected. Status '{shipment.Status}' is not 'Order Received'.");
+                return new KomutSonuc { Basarili = false, Mesaj = $"Only shipments in 'Order Received' state can be cancelled. Current status is: {shipment.Status}" };
+            }
 
             _deletedShipment = shipment;
-            await _gonderiService.DeleteShipment(_trackingNo);
+            
+            var cancelStatus = LogiTechAPI.State.GonderiDurumFactory.GetStatus("Cancelled");
+            shipment.Status = "Cancelled"; // Hardcoded to be safe
+            
+            var history = new StatusHistory 
+            { 
+                Status = "Cancelled", 
+                Message = "The cargo shipment has been cancelled.",
+                Date = DateTime.UtcNow
+            };
+            
+            shipment.StatusHistory.Add(history);
+
+            Console.WriteLine($"[DEBUG] Updating DB for shipment {_trackingNo} to 'Cancelled'...");
+            await _gonderiService.UpdateShipment(shipment);
+            Console.WriteLine($"[DEBUG] DB update completed for {_trackingNo}.");
+            
             return new KomutSonuc { Basarili = true, Mesaj = "Shipment cancelled successfully." };
         }
 
@@ -34,8 +55,13 @@ namespace LogiTechAPI.Command
         {
             if (_deletedShipment != null)
             {
-                await _gonderiService.AddShipment(_deletedShipment);
-                return new KomutSonuc { Basarili = true, Mesaj = "Cancellation undone!" };
+                var shipment = await _gonderiService.GetByTrackingNo(_trackingNo);
+                if (shipment != null)
+                {
+                    shipment.Status = "Order Received";
+                    await _gonderiService.UpdateShipment(shipment);
+                    return new KomutSonuc { Basarili = true, Mesaj = "Cancellation undone!" };
+                }
             }
             return new KomutSonuc { Basarili = false, Mesaj = "Nothing to undo!" };
         }

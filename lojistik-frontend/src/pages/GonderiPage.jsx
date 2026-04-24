@@ -49,14 +49,24 @@ export default function GonderiPage() {
     setResult(null);
 
     try {
+      const payload = {
+        receiverName: form.aliciAd,
+        receiverAddress: form.aliciAdres,
+        receiverPhone: form.aliciTelefon,
+        receiverCity: form.aliciSehir,
+        packageType: form.paketTipi,
+        extras: form.ekstralar,
+        transportMethod: form.tasimaYolu
+      };
+
       const res = await fetch(`${API}/create-shipment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.mesaj || "An error occurred.");
+      if (!res.ok) throw new Error(data.message || "An error occurred.");
       setResult(data);
     } catch (err) {
       setError(err.message);
@@ -74,28 +84,28 @@ export default function GonderiPage() {
             <h2>Shipment Successfully Created!</h2>
             <div className="takip-no-display">
               <span className="takip-label">Your Tracking Number</span>
-              <span className="takip-value">{result.takipNo}</span>
+              <span className="takip-value">{result.trackingNo}</span>
             </div>
             <div className="result-details">
               <div className="detail-row">
                 <span>Receiver</span>
-                <strong>{result.aliciAd}</strong>
+                <strong>{result.receiverName}</strong>
               </div>
               <div className="detail-row">
                 <span>Parcel Type</span>
-                <strong>{result.paketTipi}</strong>
+                <strong>{result.packageType}</strong>
               </div>
               <div className="detail-row">
                 <span>Transport Method</span>
-                <strong>{result.tasimaYolu}</strong>
+                <strong>{result.transportMethod}</strong>
               </div>
               <div className="detail-row">
                 <span>Status</span>
-                <strong>{result.durum}</strong>
+                <strong>{result.status}</strong>
               </div>
               <div className="detail-row total">
                 <span>Total Amount</span>
-                <strong>₺{result.toplamFiyat?.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}</strong>
+                <strong>₺{result.totalPrice?.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}</strong>
               </div>
             </div>
             <button className="btn-primary-lg" onClick={() => { setResult(null); setForm({ aliciAd: "", aliciAdres: "", aliciTelefon: "", aliciSehir: "", paketTipi: "Standart", ekstralar: [], tasimaYolu: "Karayolu" }); }} style={{ marginTop: "1.5rem" }}>
@@ -119,9 +129,9 @@ export default function GonderiPage() {
         <div className="form-card">
           <h3>👤 Sender Information</h3>
           <div className="sender-info">
-            <div className="info-chip">{user?.ad} {user?.soyad}</div>
+            <div className="info-chip">{user?.firstName} {user?.lastName}</div>
             <div className="info-chip">{user?.email}</div>
-            {user?.telefon && <div className="info-chip">{user?.telefon}</div>}
+            {user?.phone && <div className="info-chip">{user?.phone}</div>}
           </div>
         </div>
 

@@ -68,7 +68,7 @@ export default function KayitPage() {
 
           <div className="form-group">
             <label htmlFor="telefon">Phone Number</label>
-            <input id="telefon" type="tel" placeholder="05XX XXX XX XX" value={form.telefon} onChange={update("telefon")} />
+            <input id="telefon" type="tel" placeholder="05XX XXX XX XX" value={form.telefon} onChange={update("telefon")} required />
           </div>
 
           <div className="form-row">

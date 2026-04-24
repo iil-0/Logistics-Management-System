@@ -23,7 +23,7 @@ export default function TakipPage() {
     try {
       const res = await fetch(`${API}/track/${query}`);
       const data = await res.json();
-      if (!res.ok) throw new Error(data.mesaj || "Shipment not found.");
+      if (!res.ok) throw new Error(data.message || "Shipment not found.");
       setResult(data);
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
@@ -66,31 +66,31 @@ export default function TakipPage() {
       {result && (
         <div className="takip-result">
           <div className="takip-header-card">
-            <div className="takip-no-big">{result.takipNo}</div>
-            <span className={`gonderi-durum ${result.durum === "Delivered" || result.durum === "Teslim Edildi" ? "status-green" : result.durum === "Cancelled" || result.durum === "İptal Edildi" ? "status-red" : result.durum === "On the Way" || result.durum === "Yolda" ? "status-purple" : result.durum === "Preparing" || result.durum === "Hazırlanıyor" ? "status-orange" : "status-blue"}`}>
-              {result.durum}
+            <div className="takip-no-big">{result.trackingNo}</div>
+            <span className={`gonderi-durum ${result.status === "Delivered" || result.status === "Teslim Edildi" ? "status-green" : result.status === "Cancelled" || result.status === "İptal Edildi" ? "status-red" : result.status === "On the Way" || result.status === "Yolda" ? "status-purple" : result.status === "Preparing" || result.status === "Hazırlanıyor" ? "status-orange" : "status-blue"}`}>
+              {result.status}
             </span>
           </div>
 
           <div className="takip-details">
-            <div className="takip-row"><span>Sender</span><strong>{result.gondericiAd}</strong></div>
-            <div className="takip-row"><span>Receiver</span><strong>{result.aliciAd}</strong></div>
-            <div className="takip-row"><span>Parcel Type</span><strong>{result.paketTipi}</strong></div>
-            <div className="takip-row"><span>Transport Method</span><strong>{result.tasimaYolu}</strong></div>
-            <div className="takip-row"><span>Total Amount</span><strong>₺{result.toplamFiyat?.toLocaleString("tr-TR",{minimumFractionDigits:2})}</strong></div>
+            <div className="takip-row"><span>Sender</span><strong>{result.senderName}</strong></div>
+            <div className="takip-row"><span>Receiver</span><strong>{result.receiverName}</strong></div>
+            <div className="takip-row"><span>Parcel Type</span><strong>{result.packageType}</strong></div>
+            <div className="takip-row"><span>Transport Method</span><strong>{result.transportMethod}</strong></div>
+            <div className="takip-row"><span>Total Amount</span><strong>₺{result.totalPrice?.toLocaleString("tr-TR",{minimumFractionDigits:2})}</strong></div>
           </div>
 
-          {result.durumGecmisi?.length > 0 && (
+          {result.statusHistory?.length > 0 && (
             <div className="timeline-section">
               <h3>Shipment History</h3>
               <div className="timeline">
-                {result.durumGecmisi.map((d, i) => (
-                  <div key={i} className={`timeline-item ${i === result.durumGecmisi.length - 1 ? "active" : ""}`}>
-                    <div className="timeline-dot">{durumIcon(d.durum)}</div>
+                {result.statusHistory.map((d, i) => (
+                  <div key={i} className={`timeline-item ${i === result.statusHistory.length - 1 ? "active" : ""}`}>
+                    <div className="timeline-dot">{durumIcon(d.status)}</div>
                     <div className="timeline-content">
-                      <div className="timeline-status">{d.durum}</div>
-                      <div className="timeline-desc">{d.aciklama}</div>
-                      <div className="timeline-date">{new Date(d.tarih).toLocaleString("en-US")}</div>
+                      <div className="timeline-status">{d.status}</div>
+                      <div className="timeline-desc">{d.description}</div>
+                      <div className="timeline-date">{new Date(d.date).toLocaleString("en-US")}</div>
                     </div>
                   </div>
                 ))}

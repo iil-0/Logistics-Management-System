@@ -9,7 +9,7 @@ using LogiTechAPI.DTOs.Responses;
 namespace LogiTechAPI.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     public class AuthController : ControllerBase
     {
         private readonly UserService _userService;
@@ -28,9 +28,10 @@ namespace LogiTechAPI.Controllers
         {
             if (string.IsNullOrWhiteSpace(request.FirstName) ||
                 string.IsNullOrWhiteSpace(request.Email) ||
-                string.IsNullOrWhiteSpace(request.Password))
+                string.IsNullOrWhiteSpace(request.Password) ||
+                string.IsNullOrWhiteSpace(request.Phone))
             {
-                return BadRequest(new { message = "First name, email and password are required." });
+                return BadRequest(new { message = "First name, email, password and phone number are required." });
             }
 
             var user = await _userService.Register(
@@ -49,7 +50,8 @@ namespace LogiTechAPI.Controllers
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email,
-                Phone = user.Phone
+                Phone = user.Phone,
+                Role = user.Role
             });
         }
 
@@ -78,7 +80,8 @@ namespace LogiTechAPI.Controllers
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email,
-                Phone = user.Phone
+                Phone = user.Phone,
+                Role = user.Role
             });
         }
 
@@ -117,7 +120,8 @@ namespace LogiTechAPI.Controllers
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email,
-                Phone = user.Phone
+                Phone = user.Phone,
+                Role = user.Role
             });
         }
 
@@ -127,10 +131,15 @@ namespace LogiTechAPI.Controllers
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
-                new Claim(ClaimTypes.Email, user.Email)
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role)
             };
 
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var identity = new ClaimsIdentity(
+                claims, 
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                ClaimTypes.Name,
+                ClaimTypes.Role);
             var principal = new ClaimsPrincipal(identity);
 
             await HttpContext.SignInAsync(

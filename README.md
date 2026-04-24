@@ -1,4 +1,10 @@
-# LogiTech - Design Patterns Implementation Project
+# 🚀 LogiTech - Logistics Management System
+
+![Home Page](file:///C:/Users/oguz/.gemini/antigravity/brain/ebb49936-a88c-4e3e-b0b4-4cee47246a55/actual_home_page_1776881093451.png)
+
+LogiTech is a comprehensive cargo and logistics management platform developed using modern software architecture and enterprise Design Patterns. This project allows users to securely send cargo, track their orders, and seamlessly manage logistics processes.
+
+## 🌟 Key Features
 
 LogiTech is a full-stack cargo and logistics management system. It was developed primarily as an educational project to practice and demonstrate the use of **Object-Oriented Design Patterns** in a real-world scenario. 
 
@@ -115,9 +121,16 @@ Here are the primary API routes used in the project:
 | `/api/cargo/update-status/{trackingNo}`| `POST` | Advances the status of a shipment (requires auth). |
 | `/api/cargo/cancel/{trackingNo}` | `POST` | Cancels a shipment if it is still in the "Order Received" state. |
 
-## Screenshots
+## 🖼️ Screenshots
 
-*(Add your project screenshots here. You can drag and drop images directly into GitHub's README editor, or save them in an `assets/` folder and link them below.)*
+### Order Creation Process
+![Create Shipment](file:///C:/Users/oguz/.gemini/antigravity/brain/ebb49936-a88c-4e3e-b0b4-4cee47246a55/register_page_clean_1776881112359.png)
 
-<!-- Example: ![LogiTech Dashboard](assets/dashboard.png) -->
+### My Shipments & Tracking
+![My Shipments](file:///C:/Users/oguz/.gemini/antigravity/brain/ebb49936-a88c-4e3e-b0b4-4cee47246a55/my_shipments_page_1776881105528.png)
+![Track Shipment](file:///C:/Users/oguz/.gemini/antigravity/brain/ebb49936-a88c-4e3e-b0b4-4cee47246a55/track_shipment_page_1776881103864.png)
+
+### Example Usage Demo
+![Demo](file:///C:/Users/oguz/.gemini/antigravity/brain/ebb49936-a88c-4e3e-b0b4-4cee47246a55/logitech_testing_flow_fixed_1776880977785.webp)
+
 

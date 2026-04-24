@@ -16,36 +16,39 @@ export default function GonderilerimPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleIptal = async (takipNo) => {
-    if (!window.confirm("Are you sure you want to cancel this shipment?")) return;
+  const handleIptal = async (trackingNo) => {
+    // if (!window.confirm("Are you sure you want to cancel this shipment?")) return;
 
-    const res = await fetch(`${API}/cancel/${takipNo}`, {
-      method: "POST",
-      credentials: "include",
-    });
-    const data = await res.json();
+    try {
+      // Show loading state or immediate feedback if desired
+      const res = await fetch(`${API}/cancel/${trackingNo}`, {
+        method: "POST",
+        credentials: "include",
+      });
+      
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Cancellation failed.");
+      }
 
-    if (res.ok) {
+      const updatedShipment = await res.json();
       setGonderiler((prev) =>
-        prev.map((g) => (g.takipNo === takipNo ? data : g))
+        prev.map((g) => (g.trackingNo === trackingNo ? updatedShipment : g))
       );
-    } else {
-      alert(data.mesaj || "Cancellation failed.");
+      alert("Shipment cancelled successfully.");
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "An error occurred during cancellation.");
     }
   };
 
   const durumRenk = (durum) => {
     switch (durum) {
-      case "Order Received":
-      case "Sipariş Alındı": return "status-blue";
-      case "Preparing":
-      case "Hazırlanıyor": return "status-orange";
-      case "On the Way":
-      case "Yolda": return "status-purple";
-      case "Delivered":
-      case "Teslim Edildi": return "status-green";
-      case "Cancelled":
-      case "İptal Edildi": return "status-red";
+      case "Order Received": return "status-blue";
+      case "Preparing": return "status-orange";
+      case "On the Way": return "status-purple";
+      case "Delivered": return "status-green";
+      case "Cancelled": return "status-red";
       default: return "";
     }
   };
@@ -73,37 +76,37 @@ export default function GonderilerimPage() {
       ) : (
         <div className="gonderi-list">
           {gonderiler.map((g) => (
-            <div key={g.takipNo} className="gonderi-card">
+            <div key={g.trackingNo} className="gonderi-card">
               <div className="gonderi-header">
                 <div>
-                  <div className="gonderi-takip">{g.takipNo}</div>
+                  <div className="gonderi-takip">{g.trackingNo}</div>
                   <div className="gonderi-tarih">
-                    {new Date(g.olusturulmaTarihi).toLocaleDateString("en-US", {
+                    {new Date(g.createdAt).toLocaleDateString("en-US", {
                       day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit"
                     })}
                   </div>
                 </div>
-                <span className={`gonderi-durum ${durumRenk(g.durum)}`}>
-                  {g.durum}
+                <span className={`gonderi-durum ${durumRenk(g.status)}`}>
+                  {g.status}
                 </span>
               </div>
               <div className="gonderi-body">
                 <div className="gonderi-info">
-                  <span>📬 {g.aliciAd}</span>
-                  <span>💫 {g.paketTipi}</span>
-                  <span>🚚 {g.tasimaYolu}</span>
+                  <span>📬 {g.receiverName}</span>
+                  <span>💫 {g.packageType}</span>
+                  <span>🚚 {g.transportMethod}</span>
                 </div>
                 <div className="gonderi-fiyat">
-                  ₺{g.toplamFiyat?.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
+                  ₺{g.totalPrice?.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
                 </div>
               </div>
-              {g.iptalEdilabilir && (
-                <div className="gonderi-actions">
-                  <button className="btn-cancel" onClick={() => handleIptal(g.takipNo)}>
-                    Cancel
+              <div className="gonderi-actions" style={{ display: "flex", gap: "10px", marginTop: "1rem" }}>
+                {g.isCancellable && (
+                  <button className="btn-cancel" onClick={() => handleIptal(g.trackingNo)} style={{ backgroundColor: "#ef4444", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: "6px", cursor: "pointer" }}>
+                    Cancel Shipment
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           ))}
         </div>

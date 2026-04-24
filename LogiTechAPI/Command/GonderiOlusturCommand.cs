@@ -61,17 +61,17 @@ namespace LogiTechAPI.Command
                 var shipment = new Gonderi
                 {
                     UserId = _userId,
-                    TrackingNo = "LT-" + DateTime.Now.ToString("yyyyMMdd") + "-" + new Random().Next(1000, 9999),
-                    SenderName = $"{_user.FirstName} {_user.LastName}",
-                    SenderEmail = _user.Email,
-                    SenderPhone = _user.Phone,
-                    ReceiverName = _request.ReceiverName,
-                    ReceiverAddress = _request.ReceiverAddress,
-                    ReceiverPhone = _request.ReceiverPhone,
-                    ReceiverCity = _request.ReceiverCity,
+                    TrackingNo = "LT-" + DateTime.UtcNow.ToString("yyyyMMdd") + "-" + new Random().Next(1000, 9999),
+                    SenderName = $"{_user.FirstName ?? string.Empty} {_user.LastName ?? string.Empty}".Trim(),
+                    SenderEmail = _user.Email ?? string.Empty,
+                    SenderPhone = _user.Phone ?? string.Empty,
+                    ReceiverName = _request.ReceiverName ?? string.Empty,
+                    ReceiverAddress = _request.ReceiverAddress ?? string.Empty,
+                    ReceiverPhone = _request.ReceiverPhone ?? string.Empty,
+                    ReceiverCity = _request.ReceiverCity ?? string.Empty,
                     PackageType = paket.Name,
                     Extras = _request.Extras ?? new List<string>(),
-                    TransportMethod = strategy.Name,
+                    TransportMethod = strategy.Name ?? string.Empty,
                     TotalPrice = finalPrice,
                     Notes = _request.Notes ?? string.Empty
                 };
@@ -85,7 +85,7 @@ namespace LogiTechAPI.Command
                 { 
                     Status = shipment.Status, 
                     Message = "Shipment created successfully.",
-                    Date = DateTime.Now
+                    Date = DateTime.UtcNow
                 });
 
                 // 6. Save
@@ -96,7 +96,8 @@ namespace LogiTechAPI.Command
             }
             catch (Exception ex)
             {
-                return new KomutSonuc { Basarili = false, Mesaj = "Error: " + ex.Message };
+                var innerMsg = ex.InnerException != null ? " | Inner: " + ex.InnerException.Message : "";
+                return new KomutSonuc { Basarili = false, Mesaj = "Error: " + ex.Message + innerMsg };
             }
         }
 

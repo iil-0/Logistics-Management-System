@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./GirisPage.css";
 
 export default function GirisPage() {
   const { giris } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const redirectPath = searchParams.get("redirect");
+  const location = useLocation();
+  const redirectPath = location.state?.redirectedFrom;
   const [email, setEmail] = useState("");
   const [sifre, setSifre] = useState("");
   const [error, setError] = useState("");

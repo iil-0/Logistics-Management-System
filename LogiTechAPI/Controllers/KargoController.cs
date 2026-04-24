@@ -12,7 +12,7 @@ using LogiTechAPI.Models;
 namespace LogiTechAPI.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/cargo")]
     public class KargoController : ControllerBase
     {
         private readonly PaketFactory _factory;
@@ -83,6 +83,28 @@ namespace LogiTechAPI.Controllers
         }
 
         /// <summary>
+        /// List ALL shipments (Admin Only)
+        /// GET /api/cargo/all-shipments
+        /// </summary>
+        [Authorize(Roles = "Admin")]
+        [HttpGet("all-shipments")]
+        public async Task<IActionResult> AllShipments()
+        {
+            Console.WriteLine("----- ADMIN IDENTITY DEBUG START -----");
+            foreach (var c in User.Claims)
+            {
+                Console.WriteLine($"Claim: {c.Type} = {c.Value}");
+            }
+            Console.WriteLine($"IsAuthenticated: {User.Identity?.IsAuthenticated}");
+            Console.WriteLine("----- ADMIN IDENTITY DEBUG END -----");
+
+            var shipments = await _gonderiService.GetAllShipments();
+            var response = shipments.Select(MapShipmentResponse).ToList();
+
+            return Ok(response);
+        }
+
+        /// <summary>
         /// Track shipment with tracking number
         /// GET /api/cargo/track/{trackingNo}
         /// </summary>
@@ -97,10 +119,10 @@ namespace LogiTechAPI.Controllers
         }
 
         /// <summary>
-        /// Advance shipment status (Command Pattern)
+        /// Advance shipment status (Command Pattern) - Admin Only
         /// POST /api/cargo/update-status/{trackingNo}
         /// </summary>
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpPost("update-status/{trackingNo}")]
         public async Task<IActionResult> UpdateStatus(string trackingNo, [FromBody] string nextStatus)
         {
@@ -123,6 +145,26 @@ namespace LogiTechAPI.Controllers
         [HttpPost("cancel/{trackingNo}")]
         public async Task<IActionResult> CancelShipment(string trackingNo)
         {
+            Console.WriteLine("----- IDENTITY DEBUG START -----");
+            foreach (var c in User.Claims)
+            {
+                Console.WriteLine($"Claim: {c.Type} = {c.Value}");
+            }
+            Console.WriteLine($"IsAuthenticated: {User.Identity?.IsAuthenticated}");
+            Console.WriteLine("----- IDENTITY DEBUG END -----");
+
+            Console.WriteLine($"[DEBUG] CancelShipment endpoint reached for: {trackingNo}");
+            var shipment = await _gonderiService.GetByTrackingNo(trackingNo);
+            if (shipment == null)
+                return NotFound(new { message = "Shipment not found." });
+
+            var userId = GetUserId();
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            // Check if current user is owner OR admin
+            if (shipment.UserId != userId && userRole != "Admin")
+                return Forbid();
+
             var invoker = new KargoCommandInvoker();
             var command = new GonderiIptalCommand(_gonderiService, trackingNo);
             var result = await invoker.ExecuteCommand(command);
@@ -130,7 +172,8 @@ namespace LogiTechAPI.Controllers
             if (!result.Basarili)
                 return BadRequest(new { message = result.Mesaj });
 
-            return Ok(new { message = result.Mesaj });
+            var updatedShipment = await _gonderiService.GetByTrackingNo(trackingNo);
+            return Ok(MapShipmentResponse(updatedShipment!));
         }
 
         /// <summary>

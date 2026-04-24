@@ -35,11 +35,13 @@ namespace LogiTechAPI.Command
             { 
                 Status = statusObject.StatusName, 
                 Message = statusObject.Description,
-                Date = DateTime.Now
+                Date = DateTime.UtcNow
             });
 
             // Observer Pattern
             _gonderiService.NotifyObservers(_trackingNo, $"Status updated from {_oldStatus} to {statusObject.StatusName}", statusObject.StatusName);
+
+            await _gonderiService.UpdateShipment(shipment);
 
             return new KomutSonuc { Basarili = true, Mesaj = $"Status successfully updated to {statusObject.StatusName}." };
         }
