@@ -21,10 +21,10 @@ export function AuthProvider({ children }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ email, sifre }),
+      body: JSON.stringify({ email, password: sifre }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.mesaj || "Login failed.");
+    if (!res.ok) throw new Error(data.message || "Login failed.");
     setUser(data);
     return data;
   };
@@ -34,20 +34,31 @@ export function AuthProvider({ children }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ ad, soyad, email, telefon, sifre }),
+      body: JSON.stringify({ 
+        firstName: ad, 
+        lastName: soyad, 
+        email, 
+        phone: telefon, 
+        password: sifre 
+      }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.mesaj || "Registration failed.");
+    if (!res.ok) throw new Error(data.message || "Registration failed.");
     setUser(data);
     return data;
   };
 
   const cikis = async () => {
-    await fetch(`${API}/logout`, {
-      method: "POST",
-      credentials: "include",
-    });
-    setUser(null);
+    try {
+      await fetch(`${API}/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (err) {
+      console.error("Logout API failed", err);
+    } finally {
+      setUser(null);
+    }
   };
 
   return (
