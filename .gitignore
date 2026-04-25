@@ -12,6 +12,12 @@ dist/
 .env
 .env.local
 
+# Configuration with secrets
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.json
+secrets.json
+
 # IDE
 .idea/
 .vscode/

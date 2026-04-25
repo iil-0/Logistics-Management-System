@@ -1,0 +1,11 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=YOUR_NEON_HOST; Port=5432; Database=YOUR_DATABASE; Username=YOUR_USERNAME; Password=YOUR_PASSWORD; SslMode=Require; TrustServerCertificate=true"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  }
+}
