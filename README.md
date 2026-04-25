@@ -1,136 +1,214 @@
-# 🚀 LogiTech - Logistics Management System
+# LogiTech — Logistics Management System
 
-![Home Page](file:///C:/Users/oguz/.gemini/antigravity/brain/ebb49936-a88c-4e3e-b0b4-4cee47246a55/actual_home_page_1776881093451.png)
+LogiTech is a full-stack cargo and logistics management platform developed as an educational project for the Software Design Patterns course. The system enables users to register, create cargo shipments, and track them through their lifecycle, while the backend demonstrates the practical application of six classical Object-Oriented Design Patterns within a real-world domain.
 
-LogiTech is a comprehensive cargo and logistics management platform developed using modern software architecture and enterprise Design Patterns. This project allows users to securely send cargo, track their orders, and seamlessly manage logistics processes.
+## 1. Project Overview
 
-## 🌟 Key Features
+The primary objective of this project is to illustrate how design patterns can be employed to produce maintainable, extensible, and well-structured backend code. While a functional React-based frontend is provided to enable end-user interaction, the core focus of the project lies in the backend architecture.
 
-LogiTech is a full-stack cargo and logistics management system. It was developed primarily as an educational project to practice and demonstrate the use of **Object-Oriented Design Patterns** in a real-world scenario. 
+When a user creates a shipment, the total price is computed dynamically based on three factors: the package type, the chosen transport method, and any optional services selected by the user. Each of these concerns is handled by a distinct design pattern, ensuring a clean separation of responsibilities throughout the system.
 
-While the project has a working React frontend for users to create and track shipments, the main focus is on the backend architecture. Instead of writing simple, long blocks of code, the backend was specifically structured to show how design patterns can solve common coding problems and keep the code clean.
+## 2. Key Features
 
-## Project Overview
+- Cookie-based user authentication (registration, login, logout)
+- Shipment creation, tracking, and lifecycle management
+- Dynamic price calculation based on package type, transport method, and extra services
+- Status history maintained for each shipment
+- Support for multiple transport methods (Air, Land, Sea)
+- Optional extra services (Insurance, Fast Delivery)
+- Modular API architecture organised around design patterns
 
-In this system, users can register, log in, and create cargo shipments. When a shipment is created, the total price is calculated dynamically based on the package type, the transport method, and any extra services chosen by the user.
+## 3. Design Patterns
 
-The backend is built with **.NET 8** and uses **Entity Framework Core** to connect to a **PostgreSQL** database. The frontend is built using **React** and **Vite**.
+Six design patterns were implemented in the backend, each addressing a distinct architectural concern.
 
-## Design Patterns Used in the Project
+### 3.1 Factory Pattern (Creational)
 
-To avoid "spaghetti code" and to make the system easier to understand, 6 different design patterns were implemented in the core logic:
+Used for the creation of different package types. Rather than relying on conditional branching to instantiate objects, the Factory pattern produces the appropriate package object — `Standard`, `Fragile`, or `HeavyLoad` — based on the user's selection. Each package type encapsulates its own base price.
 
-### 1. Factory Pattern (Creational)
-This pattern is used to create different types of packages. Instead of using complex `if-else` statements to check what the user selected, the Factory pattern automatically generates the correct object (`Standard`, `Fragile`, or `Heavy Load`). Each object has its own specific base price.
+### 3.2 Decorator Pattern (Structural)
 
-### 2. Decorator Pattern (Structural)
-This pattern handles the extra services. If a user wants to add `Insurance` or `Fast Delivery` to their shipment, the Decorator pattern "wraps" the base package with these new features. This adds the extra costs to the total price without modifying the original package classes.
+Manages optional services such as Insurance and Fast Delivery. The Decorator pattern wraps the base package object, dynamically attaching additional cost and behaviour without modifying the underlying package classes. This adheres to the Open/Closed Principle.
 
-### 3. Strategy Pattern (Behavioral)
-This pattern calculates the final shipping cost based on how the cargo will travel. The math for `Airway`, `Roadway`, and `Seaway` is separated into different strategy classes. This makes the code very organized and makes it easy to add a new transport method later.
+### 3.3 Strategy Pattern (Behavioural)
 
-### 4. Observer Pattern (Behavioral)
-This pattern is used for the notification system. When a shipment's status changes (for example, from "Preparing" to "On the Way"), the system automatically updates the observers. This keeps the different parts of the system separated but still communicating.
+Encapsulates the cost calculation logic for each transport method. Airway, Roadway, and Seaway calculations are isolated in separate strategy classes, which allows new transport methods to be introduced without altering existing code.
 
-### 5. State Pattern (Behavioral)
-This pattern controls the lifecycle of a cargo. A shipment can be in different states like `Order Received`, `Preparing`, `On the Way`, `Delivered`, or `Cancelled`. The State pattern ensures that logical rules are followed (for example, a package cannot be cancelled if it is already on the way).
+### 3.4 Observer Pattern (Behavioural)
 
-### 6. Command Pattern (Behavioral)
-This pattern manages the main actions, like creating a shipment or updating its status. Every action is turned into a separate command object. This keeps the API controllers very clean and makes it possible to easily add an "Undo" feature to reverse actions.
+Underpins the notification subsystem. When the status of a shipment changes, all registered observers are notified automatically, decoupling the status-update logic from the components that react to it.
 
-## Technical Stack
+### 3.5 State Pattern (Behavioural)
 
-### Backend
-- **Framework:** .NET 8 (ASP.NET Core Web API)
-- **Database:** PostgreSQL (Entity Framework Core)
-- **Authentication:** Cookie-based Authentication
+Governs the lifecycle of a shipment. A shipment may be in one of the following states: `Order Received`, `Preparing`, `On the Way`, `Delivered`, or `Cancelled`. The State pattern enforces valid transitions between states (for example, a shipment that is already on the way cannot be cancelled).
 
-### Frontend
-- **Framework:** React with Vite
-- **Styling:** Vanilla CSS (Navy Blue Theme)
+### 3.6 Command Pattern (Behavioural)
 
-## Project Structure
+Encapsulates user actions — such as creating a shipment or updating its status — as discrete command objects. This keeps the API controllers thin and provides a foundation for future extensions such as undo functionality or action logging.
 
-The folders in the backend were specifically named after the design patterns to make the structure clear and easy to follow.
+## 4. Technical Stack
 
-```text
+**Backend**
+- Framework: .NET 8 (ASP.NET Core Web API)
+- ORM: Entity Framework Core
+- Database: PostgreSQL (Neon, remote instance)
+- Authentication: Cookie-based authentication
+
+**Frontend**
+- Framework: React (with Vite)
+- Styling: Vanilla CSS (Navy Blue theme)
+
+**Auxiliary Tooling**
+- DataMigrator: a .NET console application included in the repository for migrating data from a local PostgreSQL database to the remote Neon instance.
+
+## 5. Project Structure
+
+The backend folders are deliberately named after the design patterns they contain, in order to make the architectural intent of the project explicit.
+
+```
 LogiTech/
-├── LogiTechAPI/              (Backend Source Code)
-│   ├── Command/              (Command Pattern Implementations)
-│   ├── Controllers/          (API Endpoints)
-│   ├── Data/                 (EF Core DbContext & Migrations)
-│   ├── Decorator/            (Structural Decorators)
-│   ├── DTOs/                 (Data Transfer Objects - Requests & Responses)
-│   ├── Factory/              (Creational Logic)
-│   ├── Models/               (Database Entities)
-│   ├── Observer/             (Notification System)
-│   ├── Services/             (Business Logic Layer)
-│   ├── State/                (State Pattern Logic)
-│   └── Strategy/             (Calculation Strategies)
+├── LogiTechAPI/                              (Backend source code)
+│   ├── Command/                              (Command pattern implementations)
+│   ├── Controllers/                          (API endpoints)
+│   ├── Data/                                 (EF Core DbContext and migrations)
+│   ├── Decorator/                            (Structural decorators for extra services)
+│   ├── DTOs/                                 (Request and response models)
+│   ├── Factory/                              (Factory pattern for package creation)
+│   ├── Models/                               (Database entities)
+│   ├── Observer/                             (Notification subsystem)
+│   ├── Services/                             (Business logic layer)
+│   ├── State/                                (State pattern for shipment lifecycle)
+│   ├── Strategy/                             (Strategy pattern for transport methods)
+│   ├── appsettings.json                      (Configuration with placeholder credentials)
+│   └── appsettings.Development.json.example  (Example development configuration)
 │
-└── lojistik-frontend/        (Frontend Source Code)
+├── DataMigrator/                             (Database migration utility)
+│   ├── Program.cs
+│   └── DataMigrator.csproj
+│
+└── lojistik-frontend/                        (Frontend source code)
     ├── src/
-    │   ├── components/       (Reusable UI Components)
-    │   ├── context/          (Authentication Context)
-    │   ├── pages/            (Page-level Components)
-    │   └── App.jsx           (Root Component and Routing)
+    │   ├── components/                       (Reusable UI components)
+    │   ├── context/                          (Authentication context)
+    │   ├── pages/                            (Page-level components)
+    │   └── App.jsx                           (Root component and routing)
+    ├── package.json
+    └── vite.config.js
 ```
 
-## How to Run the Project
+## 6. Database Configuration
 
-### Requirements
+The project was originally developed against a local PostgreSQL instance and has since been migrated to a remote Neon PostgreSQL deployment for improved availability and ease of collaboration.
+
+| Property         | Value                                                                       |
+|------------------|-----------------------------------------------------------------------------|
+| Local database   | PostgreSQL at `localhost:5432` (`LogiTechDB`)                               |
+| Remote database  | Neon PostgreSQL (`neondb`, eu-central-1 region)                             |
+| Migration tool   | `DataMigrator` console application (included in the repository)             |
+
+### 6.1 Configuration Setup
+
+A template configuration file is provided at `LogiTechAPI/appsettings.Development.json.example`. To configure the application locally, create a file named `appsettings.Development.json` in the same directory and populate it with the appropriate credentials:
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=YOUR_HOST; Port=5432; Database=YOUR_DATABASE; Username=YOUR_USERNAME; Password=YOUR_PASSWORD; SslMode=Require; TrustServerCertificate=true"
+  }
+}
+```
+
+### 6.2 Data Migration Utility
+
+The `DataMigrator` tool transfers data from a local PostgreSQL database to the remote Neon instance. Specifically, it:
+
+1. Reads data from the local PostgreSQL database;
+2. Migrates the `Users`, `Shipments`, and `StatusHistories` tables;
+3. Clears existing remote data to avoid conflicts;
+4. Updates auto-increment sequences to preserve identifier continuity;
+5. Handles `DateTime` fields with appropriate timezone conversion.
+
+To execute the migration:
+
+```bash
+cd DataMigrator
+dotnet run
+```
+
+For production environments, connection strings should be supplied via environment variables or a dedicated secrets manager rather than hard-coded values.
+
+## 7. Installation and Execution
+
+### 7.1 Prerequisites
+
 - .NET 8 SDK
-- Node.js (v18+)
-- PostgreSQL Database
+- Node.js (version 18 or above)
+- PostgreSQL (local or remote)
 
-### Setup Instructions
+### 7.2 Steps
 
-1. **Database Setup:**
-   Open a terminal in the `LogiTechAPI` folder and run this command to create the database tables:
-   ```bash
-   dotnet ef database update
-   ```
+**Step 1 — Apply database migrations**
 
-2. **Start the Backend API:**
-   In the same `LogiTechAPI` folder, run:
-   ```bash
-   dotnet run
-   ```
-   *The API will be running at `http://localhost:5085`*
+```bash
+cd LogiTechAPI
+dotnet ef database update
+```
 
-3. **Start the Frontend:**
-   Open a new terminal, go to the `lojistik-frontend` folder, and run:
-   ```bash
-   npm install
-   npm run dev
-   ```
-   *The website will be running at `http://localhost:5173`*
+**Step 2 — Migrate existing data (optional)**
 
-## API Endpoints
+```bash
+cd DataMigrator
+dotnet run
+```
 
-Here are the primary API routes used in the project:
+**Step 3 — Run the backend API**
 
-| Endpoint | HTTP Method | Description |
-| :--- | :--- | :--- |
-| `/api/auth/register` | `POST` | Registers a new user. |
-| `/api/auth/login` | `POST` | Authenticates a user and sets a cookie. |
-| `/api/auth/me` | `GET` | Retrieves the currently logged-in user's details. |
-| `/api/cargo/create-shipment` | `POST` | Calculates total price and creates a new shipment. |
-| `/api/cargo/my-shipments` | `GET` | Retrieves all shipments belonging to the logged-in user. |
-| `/api/cargo/track/{trackingNo}` | `GET` | Retrieves the current status and history of a specific shipment. |
-| `/api/cargo/update-status/{trackingNo}`| `POST` | Advances the status of a shipment (requires auth). |
-| `/api/cargo/cancel/{trackingNo}` | `POST` | Cancels a shipment if it is still in the "Order Received" state. |
+```bash
+cd LogiTechAPI
+dotnet run
+```
 
-## 🖼️ Screenshots
+The API will be available at `http://localhost:5085`.
 
-### Order Creation Process
-![Create Shipment](file:///C:/Users/oguz/.gemini/antigravity/brain/ebb49936-a88c-4e3e-b0b4-4cee47246a55/register_page_clean_1776881112359.png)
+**Step 4 — Run the frontend**
 
-### My Shipments & Tracking
-![My Shipments](file:///C:/Users/oguz/.gemini/antigravity/brain/ebb49936-a88c-4e3e-b0b4-4cee47246a55/my_shipments_page_1776881105528.png)
-![Track Shipment](file:///C:/Users/oguz/.gemini/antigravity/brain/ebb49936-a88c-4e3e-b0b4-4cee47246a55/track_shipment_page_1776881103864.png)
+In a new terminal:
 
-### Example Usage Demo
-![Demo](file:///C:/Users/oguz/.gemini/antigravity/brain/ebb49936-a88c-4e3e-b0b4-4cee47246a55/logitech_testing_flow_fixed_1776880977785.webp)
+```bash
+cd lojistik-frontend
+npm install
+npm run dev
+```
 
+The web application will be available at `http://localhost:5173`.
 
+## 8. API Endpoints
+
+| Endpoint                                  | Method | Description                                                                  |
+|-------------------------------------------|--------|------------------------------------------------------------------------------|
+| `/api/auth/register`                      | POST   | Registers a new user.                                                        |
+| `/api/auth/login`                         | POST   | Authenticates a user and issues an authentication cookie.                    |
+| `/api/auth/logout`                        | POST   | Logs out the currently authenticated user.                                   |
+| `/api/auth/me`                            | GET    | Returns details of the currently authenticated user.                         |
+| `/api/cargo/create-shipment`              | POST   | Computes the total price and creates a new shipment.                         |
+| `/api/cargo/my-shipments`                 | GET    | Returns all shipments belonging to the authenticated user.                   |
+| `/api/cargo/track/{trackingNo}`           | GET    | Returns the current status and full history of the specified shipment.       |
+| `/api/cargo/update-status/{trackingNo}`   | POST   | Advances a shipment to the next status (requires authentication).            |
+| `/api/cargo/cancel/{trackingNo}`          | POST   | Cancels a shipment, provided it is still in the `Order Received` state.      |
+
+## 9. Security Considerations
+
+The following points should be observed prior to any production deployment:
+
+- Database credentials must not be committed to version control. Environment variables or a dedicated secrets manager should be used instead.
+- The placeholder values in `appsettings.json` must be replaced with valid credentials in each deployment environment.
+- The current implementation hashes passwords using SHA-256. For production use, this should be replaced with a password-hashing algorithm such as BCrypt or Argon2.
+- Rate limiting should be applied to authentication endpoints in order to mitigate brute-force attacks.
+- HTTPS should be enforced and cookies should be configured with the appropriate security flags (`Secure`, `HttpOnly`, `SameSite`).
+
+## 10. Development Notes
+
+- Example configuration files (suffixed with `.example`) are provided to assist new contributors in setting up their development environment.
+- The `.gitignore` file is configured to exclude environment-specific configuration files from version control.
+- Each design pattern is implemented in a dedicated module for the sake of clarity and pedagogical value.
+- The `DataMigrator` tool is intended for development use; it should be secured or removed before production deployment.
