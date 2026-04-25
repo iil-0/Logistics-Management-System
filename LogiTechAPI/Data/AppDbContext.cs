@@ -7,9 +7,9 @@ namespace LogiTechAPI.Data
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-        public DbSet<User> Users { get; set; }
-        public DbSet<Gonderi> Shipments { get; set; }
-        public DbSet<StatusHistory> StatusHistories { get; set; }
+        public DbSet<User> Users { get; set; } = null!;
+        public DbSet<Gonderi> Shipments { get; set; } = null!;
+        public DbSet<StatusHistory> StatusHistories { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
