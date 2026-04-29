@@ -1,0 +1,14 @@
+services:
+  api:
+    build: ./LogiTechAPI
+    ports:
+      - "5085:8080"
+    environment:
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
+
+  frontend:
+    build: ./lojistik-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
