@@ -3,6 +3,7 @@ using LogiTechAPI.Factory;
 using LogiTechAPI.Services;
 using Microsoft.EntityFrameworkCore;
 using LogiTechAPI.Data;
+using LogiTechAPI.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,7 @@ builder.Services.AddControllers();
 builder.Services.AddSingleton<PaketFactory>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<GonderiService>();
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
 // PostgreSQL DbContext Registration
 builder.Services.AddDbContext<AppDbContext>(options =>

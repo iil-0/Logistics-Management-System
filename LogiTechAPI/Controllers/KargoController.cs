@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using LogiTechAPI.Factory;
 using LogiTechAPI.Services;
+using LogiTechAPI.Settings;
 using LogiTechAPI.DTOs.Requests;
 using LogiTechAPI.DTOs.Responses;
 using LogiTechAPI.Command;
@@ -19,17 +21,20 @@ namespace LogiTechAPI.Controllers
         private readonly GonderiService _gonderiService;
         private readonly UserService _userService;
         private readonly ILogger<KargoController> _logger;
+        private readonly EmailSettings _emailSettings;
 
         public KargoController(
             PaketFactory factory,
             GonderiService gonderiService,
             UserService userService,
-            ILogger<KargoController> logger)
+            ILogger<KargoController> logger,
+            IOptions<EmailSettings> emailSettings)
         {
             _factory = factory;
             _gonderiService = gonderiService;
             _userService = userService;
             _logger = logger;
+            _emailSettings = emailSettings.Value;
         }
 
         /// <summary>
@@ -54,7 +59,7 @@ namespace LogiTechAPI.Controllers
             // Command Pattern — Run shipment creation command
             var invoker = new KargoCommandInvoker();
             var command = new GonderiOlusturCommand(
-                _factory, _gonderiService, request, userId.Value, user);
+                _factory, _gonderiService, request, userId.Value, user, _emailSettings);
 
             var result = await invoker.ExecuteCommand(command);
 

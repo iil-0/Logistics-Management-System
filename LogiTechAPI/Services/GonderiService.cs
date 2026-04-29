@@ -67,7 +67,7 @@ namespace LogiTechAPI.Services
         {
             if (!_observers.ContainsKey(trackingNo))
                 _observers[trackingNo] = new List<IShipmentObserver>();
-            
+
             _observers[trackingNo].Add(observer);
         }
 
@@ -78,6 +78,11 @@ namespace LogiTechAPI.Services
                 foreach (var observer in observers)
                     observer.Update(message, status);
             }
+        }
+
+        public void RemoveObservers(string trackingNo)
+        {
+            _observers.TryRemove(trackingNo, out _);
         }
     }
 }

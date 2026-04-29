@@ -5,6 +5,7 @@ using LogiTechAPI.Strategy;
 using LogiTechAPI.Observer;
 using LogiTechAPI.State;
 using LogiTechAPI.Services;
+using LogiTechAPI.Settings;
 using LogiTechAPI.DTOs.Requests;
 
 namespace LogiTechAPI.Command
@@ -16,6 +17,7 @@ namespace LogiTechAPI.Command
         private readonly ShipmentRequest _request;
         private readonly int _userId;
         private readonly User _user;
+        private readonly EmailSettings _emailSettings;
         private Gonderi? _createdShipment;
 
         public string KomutAdi => "Create Shipment";
@@ -25,13 +27,15 @@ namespace LogiTechAPI.Command
             GonderiService gonderiService,
             ShipmentRequest request,
             int userId,
-            User user)
+            User user,
+            EmailSettings emailSettings)
         {
             _factory = factory;
             _gonderiService = gonderiService;
             _request = request;
             _userId = userId;
             _user = user;
+            _emailSettings = emailSettings;
         }
 
         public async Task<KomutSonuc> Execute()
@@ -77,8 +81,14 @@ namespace LogiTechAPI.Command
                 };
 
                 // 5. State & Observer
-                var observer = new NotificationObserver();
-                _gonderiService.AddObserver(shipment.TrackingNo, observer);
+                _gonderiService.AddObserver(shipment.TrackingNo, new NotificationObserver());
+
+                if (!string.IsNullOrWhiteSpace(_user.Email))
+                {
+                    _gonderiService.AddObserver(
+                        shipment.TrackingNo,
+                        new EmailObserver(_user.Email, shipment.TrackingNo, _emailSettings));
+                }
 
                 shipment.Status = "Order Received";
                 shipment.StatusHistory.Add(new StatusHistory 
