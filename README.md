@@ -16,7 +16,9 @@ When a user creates a shipment, the total price is computed dynamically based on
 - Status history maintained for each shipment
 - Support for multiple transport methods (Air, Land, Sea)
 - Optional extra services (Insurance, Fast Delivery)
+- Real email notifications dispatched via Gmail SMTP on each status change
 - Modular API architecture organised around design patterns
+- Containerised deployment via Docker and Docker Compose
 
 ## 3. Design Patterns
 
@@ -36,7 +38,7 @@ Encapsulates the cost calculation logic for each transport method. Airway, Roadw
 
 ### 3.4 Observer Pattern (Behavioural)
 
-Underpins the notification subsystem. When the status of a shipment changes, all registered observers are notified automatically, decoupling the status-update logic from the components that react to it.
+Underpins the notification subsystem. When the status of a shipment changes, all registered observers — including a `NotificationObserver` for in-memory logging and an `EmailObserver` that dispatches real emails through Gmail SMTP — are notified automatically. To ensure that observer subscriptions persist across HTTP requests, the registry holding them is implemented as a singleton (`ObserverRegistry`), decoupling subscription lifetime from the per-request lifecycle of the service layer.
 
 ### 3.5 State Pattern (Behavioural)
 
@@ -53,13 +55,15 @@ Encapsulates user actions — such as creating a shipment or updating its status
 - ORM: Entity Framework Core
 - Database: PostgreSQL (Neon, remote instance)
 - Authentication: Cookie-based authentication
+- Email delivery: System.Net.Mail over Gmail SMTP
 
 **Frontend**
 - Framework: React (with Vite)
 - Styling: Vanilla CSS (Navy Blue theme)
 
-**Auxiliary Tooling**
-- DataMigrator: a .NET console application included in the repository for migrating data from a local PostgreSQL database to the remote Neon instance.
+**Infrastructure**
+- Docker and Docker Compose for containerised deployment of the API and frontend
+- Nginx serves the production build of the frontend inside its container
 
 ## 5. Project Structure
 
@@ -75,77 +79,86 @@ LogiTech/
 │   ├── DTOs/                                 (Request and response models)
 │   ├── Factory/                              (Factory pattern for package creation)
 │   ├── Models/                               (Database entities)
-│   ├── Observer/                             (Notification subsystem)
-│   ├── Services/                             (Business logic layer)
+│   ├── Observer/                             (Notification subsystem, including EmailObserver)
+│   ├── Services/                             (Business logic layer, includes the singleton ObserverRegistry)
+│   ├── Settings/                             (Strongly-typed configuration models, e.g. EmailSettings)
 │   ├── State/                                (State pattern for shipment lifecycle)
 │   ├── Strategy/                             (Strategy pattern for transport methods)
-│   ├── appsettings.json                      (Configuration with placeholder credentials)
-│   └── appsettings.Development.json.example  (Example development configuration)
+│   ├── Dockerfile                            (Container build definition for the API)
+│   └── appsettings.json                      (Local configuration; ignored by git)
 │
-├── DataMigrator/                             (Database migration utility)
-│   ├── Program.cs
-│   └── DataMigrator.csproj
+├── lojistik-frontend/                        (Frontend source code)
+│   ├── src/
+│   │   ├── components/                       (Reusable UI components)
+│   │   ├── context/                          (Authentication context)
+│   │   ├── pages/                            (Page-level components)
+│   │   └── App.jsx                           (Root component and routing)
+│   ├── Dockerfile                            (Container build definition for the frontend)
+│   ├── package.json
+│   └── vite.config.js
 │
-└── lojistik-frontend/                        (Frontend source code)
-    ├── src/
-    │   ├── components/                       (Reusable UI components)
-    │   ├── context/                          (Authentication context)
-    │   ├── pages/                            (Page-level components)
-    │   └── App.jsx                           (Root component and routing)
-    ├── package.json
-    └── vite.config.js
+├── docker-compose.yml                        (Service composition for API and frontend)
+└── .env                                      (Environment variables for Docker; ignored by git)
 ```
 
-## 6. Database Configuration
+## 6. Configuration
 
-The project was originally developed against a local PostgreSQL instance and has since been migrated to a remote Neon PostgreSQL deployment for improved availability and ease of collaboration.
+### 6.1 Database
 
-| Property         | Value                                                                       |
-|------------------|-----------------------------------------------------------------------------|
-| Local database   | PostgreSQL at `localhost:5432` (`LogiTechDB`)                               |
-| Remote database  | Neon PostgreSQL (`neondb`, eu-central-1 region)                             |
-| Migration tool   | `DataMigrator` console application (included in the repository)             |
+The project uses a remote Neon PostgreSQL deployment for improved availability and ease of collaboration. The connection string is supplied to the API in one of two ways:
 
-### 6.1 Configuration Setup
+- During local development (without Docker): via `LogiTechAPI/appsettings.json`
+- When running through Docker Compose: via the `DB_CONNECTION_STRING` environment variable, typically declared in a local `.env` file
 
-A template configuration file is provided at `LogiTechAPI/appsettings.Development.json.example`. To configure the application locally, create a file named `appsettings.Development.json` in the same directory and populate it with the appropriate credentials:
+Both `appsettings.json` and `.env` are excluded from version control to prevent credentials from being committed.
 
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=YOUR_HOST; Port=5432; Database=YOUR_DATABASE; Username=YOUR_USERNAME; Password=YOUR_PASSWORD; SslMode=Require; TrustServerCertificate=true"
+    "DefaultConnection": "Host=YOUR_HOST; Port=5432; Database=YOUR_DATABASE; Username=YOUR_USERNAME; Password=YOUR_PASSWORD; SslMode=Require; Channel Binding=Require"
   }
 }
 ```
 
-### 6.2 Data Migration Utility
+### 6.2 Email Notifications
 
-The `DataMigrator` tool transfers data from a local PostgreSQL database to the remote Neon instance. Specifically, it:
+The `EmailObserver` dispatches notifications to the shipment owner whenever the shipment status changes. Configuration is provided through the `EmailSettings` section of `appsettings.json`:
 
-1. Reads data from the local PostgreSQL database;
-2. Migrates the `Users`, `Shipments`, and `StatusHistories` tables;
-3. Clears existing remote data to avoid conflicts;
-4. Updates auto-increment sequences to preserve identifier continuity;
-5. Handles `DateTime` fields with appropriate timezone conversion.
-
-To execute the migration:
-
-```bash
-cd DataMigrator
-dotnet run
+```json
+{
+  "EmailSettings": {
+    "SmtpHost": "smtp.gmail.com",
+    "SmtpPort": 587,
+    "SenderEmail": "your-account@gmail.com",
+    "AppPassword": "your-16-character-gmail-app-password"
+  }
+}
 ```
 
-For production environments, connection strings should be supplied via environment variables or a dedicated secrets manager rather than hard-coded values.
+A Gmail account with two-factor authentication enabled is required, along with an App Password generated specifically for this application.
 
 ## 7. Installation and Execution
 
 ### 7.1 Prerequisites
 
-- .NET 8 SDK
-- Node.js (version 18 or above)
-- PostgreSQL (local or remote)
+- .NET 8 SDK (only required when running outside Docker)
+- Node.js version 18 or above (only required when running the frontend outside Docker)
+- Docker Desktop (required for the containerised setup)
 
-### 7.2 Steps
+### 7.2 Running with Docker (recommended)
+
+The simplest way to run the entire stack is via Docker Compose. Ensure that a `.env` file containing the `DB_CONNECTION_STRING` variable is present at the repository root.
+
+```bash
+docker-compose up --build
+```
+
+Once the build completes, the services are available at:
+
+- API: `http://localhost:5085`
+- Frontend: `http://localhost:5173`
+
+### 7.3 Running Locally Without Docker
 
 **Step 1 — Apply database migrations**
 
@@ -154,14 +167,7 @@ cd LogiTechAPI
 dotnet ef database update
 ```
 
-**Step 2 — Migrate existing data (optional)**
-
-```bash
-cd DataMigrator
-dotnet run
-```
-
-**Step 3 — Run the backend API**
+**Step 2 — Run the backend API**
 
 ```bash
 cd LogiTechAPI
@@ -170,7 +176,7 @@ dotnet run
 
 The API will be available at `http://localhost:5085`.
 
-**Step 4 — Run the frontend**
+**Step 3 — Run the frontend**
 
 In a new terminal:
 
@@ -192,23 +198,24 @@ The web application will be available at `http://localhost:5173`.
 | `/api/auth/me`                            | GET    | Returns details of the currently authenticated user.                         |
 | `/api/cargo/create-shipment`              | POST   | Computes the total price and creates a new shipment.                         |
 | `/api/cargo/my-shipments`                 | GET    | Returns all shipments belonging to the authenticated user.                   |
-| `/api/cargo/track/{trackingNo}`           | GET    | Returns the current status and full history of the specified shipment.       |
-| `/api/cargo/update-status/{trackingNo}`   | POST   | Advances a shipment to the next status (requires authentication).            |
+| `/api/cargo/all-shipments`                | GET    | Returns all shipments in the system (administrators only).                   |
+| `/api/cargo/track/{trackingNo}`           | GET    | Returns the current status and full history of the specified shipment.      |
+| `/api/cargo/update-status/{trackingNo}`   | POST   | Advances a shipment to the next status (administrators only).               |
 | `/api/cargo/cancel/{trackingNo}`          | POST   | Cancels a shipment, provided it is still in the `Order Received` state.      |
+| `/api/cargo/health`                       | GET    | Returns the current health status of the API.                                |
 
 ## 9. Security Considerations
 
 The following points should be observed prior to any production deployment:
 
-- Database credentials must not be committed to version control. Environment variables or a dedicated secrets manager should be used instead.
-- The placeholder values in `appsettings.json` must be replaced with valid credentials in each deployment environment.
+- Database credentials and SMTP App Passwords must not be committed to version control. Environment variables or a dedicated secrets manager should be used instead.
 - The current implementation hashes passwords using SHA-256. For production use, this should be replaced with a password-hashing algorithm such as BCrypt or Argon2.
 - Rate limiting should be applied to authentication endpoints in order to mitigate brute-force attacks.
 - HTTPS should be enforced and cookies should be configured with the appropriate security flags (`Secure`, `HttpOnly`, `SameSite`).
+- For email delivery in production, a dedicated transactional email provider (such as SendGrid or Mailgun) is recommended in place of personal Gmail SMTP credentials.
 
 ## 10. Development Notes
 
-- Example configuration files (suffixed with `.example`) are provided to assist new contributors in setting up their development environment.
-- The `.gitignore` file is configured to exclude environment-specific configuration files from version control.
+- Configuration files containing secrets (`appsettings.json`, `.env`) are excluded from version control via `.gitignore`.
 - Each design pattern is implemented in a dedicated module for the sake of clarity and pedagogical value.
-- The `DataMigrator` tool is intended for development use; it should be secured or removed before production deployment.
+- The `ObserverRegistry` is registered as a singleton in the dependency-injection container, while domain services such as `GonderiService` remain scoped to each HTTP request; this combination allows observer subscriptions to outlive individual requests without compromising request-level isolation of the database context.
