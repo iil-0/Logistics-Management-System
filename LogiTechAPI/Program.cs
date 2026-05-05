@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // ─── Services ────────────────────────────────────────────────────────────────
 builder.Services.AddControllers();
 builder.Services.AddSingleton<PaketFactory>();
+builder.Services.AddSingleton<ObserverRegistry>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<GonderiService>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));

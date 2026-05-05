@@ -2,18 +2,18 @@ using LogiTechAPI.Data;
 using LogiTechAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using LogiTechAPI.Observer;
-using System.Collections.Concurrent;
 
 namespace LogiTechAPI.Services
 {
     public class GonderiService
     {
         private readonly AppDbContext _context;
-        private readonly ConcurrentDictionary<string, List<IShipmentObserver>> _observers = new();
+        private readonly ObserverRegistry _registry;
 
-        public GonderiService(AppDbContext context)
+        public GonderiService(AppDbContext context, ObserverRegistry registry)
         {
             _context = context;
+            _registry = registry;
         }
 
         public async Task AddShipment(Gonderi shipment)
@@ -62,27 +62,14 @@ namespace LogiTechAPI.Services
                 .ToListAsync();
         }
 
-        // Observer Pattern methods
+        // Observer Pattern — singleton kayit defterine devrediyor
         public void AddObserver(string trackingNo, IShipmentObserver observer)
-        {
-            if (!_observers.ContainsKey(trackingNo))
-                _observers[trackingNo] = new List<IShipmentObserver>();
-
-            _observers[trackingNo].Add(observer);
-        }
+            => _registry.Add(trackingNo, observer);
 
         public void NotifyObservers(string trackingNo, string message, string status)
-        {
-            if (_observers.TryGetValue(trackingNo, out var observers))
-            {
-                foreach (var observer in observers)
-                    observer.Update(message, status);
-            }
-        }
+            => _registry.Notify(trackingNo, message, status);
 
         public void RemoveObservers(string trackingNo)
-        {
-            _observers.TryRemove(trackingNo, out _);
-        }
+            => _registry.Remove(trackingNo);
     }
 }
