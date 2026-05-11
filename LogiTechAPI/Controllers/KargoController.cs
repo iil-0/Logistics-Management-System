@@ -22,19 +22,25 @@ namespace LogiTechAPI.Controllers
         private readonly UserService _userService;
         private readonly ILogger<KargoController> _logger;
         private readonly EmailSettings _emailSettings;
+        private readonly KargoCommandInvoker _invoker;
+        private readonly IServiceScopeFactory _scopeFactory; // Komutlar Singleton stack'te yaşar; her execute/undo'da TAZE GonderiService gerekir
 
         public KargoController(
             PaketFactory factory,
             GonderiService gonderiService,
             UserService userService,
             ILogger<KargoController> logger,
-            IOptions<EmailSettings> emailSettings)
+            IOptions<EmailSettings> emailSettings,
+            KargoCommandInvoker invoker,
+            IServiceScopeFactory scopeFactory)
         {
             _factory = factory;
             _gonderiService = gonderiService;
             _userService = userService;
             _logger = logger;
             _emailSettings = emailSettings.Value;
+            _invoker = invoker;
+            _scopeFactory = scopeFactory;
         }
 
         /// <summary>
@@ -56,12 +62,10 @@ namespace LogiTechAPI.Controllers
             if (user == null)
                 return Unauthorized(new { message = "User not found." });
 
-            // Command Pattern — Run shipment creation command
-            var invoker = new KargoCommandInvoker();
             var command = new GonderiOlusturCommand(
-                _factory, _gonderiService, request, userId.Value, user, _emailSettings);
+                _scopeFactory, _factory, request, userId.Value, user, _emailSettings);
 
-            var result = await invoker.ExecuteCommand(command);
+            var result = await _invoker.ExecuteCommand(userId.Value, command);
 
             if (!result.Basarili)
                 return BadRequest(new { message = result.Mesaj });
@@ -95,14 +99,6 @@ namespace LogiTechAPI.Controllers
         [HttpGet("all-shipments")]
         public async Task<IActionResult> AllShipments()
         {
-            Console.WriteLine("----- ADMIN IDENTITY DEBUG START -----");
-            foreach (var c in User.Claims)
-            {
-                Console.WriteLine($"Claim: {c.Type} = {c.Value}");
-            }
-            Console.WriteLine($"IsAuthenticated: {User.Identity?.IsAuthenticated}");
-            Console.WriteLine("----- ADMIN IDENTITY DEBUG END -----");
-
             var shipments = await _gonderiService.GetAllShipments();
             var response = shipments.Select(MapShipmentResponse).ToList();
 
@@ -131,9 +127,12 @@ namespace LogiTechAPI.Controllers
         [HttpPost("update-status/{trackingNo}")]
         public async Task<IActionResult> UpdateStatus(string trackingNo, [FromBody] string nextStatus)
         {
-            var invoker = new KargoCommandInvoker();
-            var command = new DurumGuncelleCommand(_gonderiService, trackingNo, nextStatus);
-            var result = await invoker.ExecuteCommand(command);
+            var userId = GetUserId();
+            if (userId == null)
+                return Unauthorized(new { message = "Session not found." });
+
+            var command = new DurumGuncelleCommand(_scopeFactory, trackingNo, nextStatus);
+            var result = await _invoker.ExecuteCommand(userId.Value, command);
 
             if (!result.Basarili)
                 return BadRequest(new { message = result.Mesaj });
@@ -150,35 +149,81 @@ namespace LogiTechAPI.Controllers
         [HttpPost("cancel/{trackingNo}")]
         public async Task<IActionResult> CancelShipment(string trackingNo)
         {
-            Console.WriteLine("----- IDENTITY DEBUG START -----");
-            foreach (var c in User.Claims)
-            {
-                Console.WriteLine($"Claim: {c.Type} = {c.Value}");
-            }
-            Console.WriteLine($"IsAuthenticated: {User.Identity?.IsAuthenticated}");
-            Console.WriteLine("----- IDENTITY DEBUG END -----");
-
-            Console.WriteLine($"[DEBUG] CancelShipment endpoint reached for: {trackingNo}");
             var shipment = await _gonderiService.GetByTrackingNo(trackingNo);
             if (shipment == null)
                 return NotFound(new { message = "Shipment not found." });
 
             var userId = GetUserId();
+            if (userId == null)
+                return Unauthorized(new { message = "Session not found." });
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
             // Check if current user is owner OR admin
             if (shipment.UserId != userId && userRole != "Admin")
                 return Forbid();
 
-            var invoker = new KargoCommandInvoker();
-            var command = new GonderiIptalCommand(_gonderiService, trackingNo);
-            var result = await invoker.ExecuteCommand(command);
+            var command = new GonderiIptalCommand(_scopeFactory, trackingNo);
+            var result = await _invoker.ExecuteCommand(userId.Value, command);
 
             if (!result.Basarili)
                 return BadRequest(new { message = result.Mesaj });
 
             var updatedShipment = await _gonderiService.GetByTrackingNo(trackingNo);
             return Ok(MapShipmentResponse(updatedShipment!));
+        }
+
+        /// <summary>
+        /// Undo last command for current user (Command Pattern)
+        /// POST /api/cargo/undo
+        /// </summary>
+        [Authorize]
+        [HttpPost("undo")]
+        public async Task<IActionResult> Undo()
+        {
+            var userId = GetUserId();
+            if (userId == null)
+                return Unauthorized(new { message = "Session not found." });
+
+            var result = await _invoker.UndoLastCommand(userId.Value);
+            if (!result.Basarili)
+                return BadRequest(new { message = result.Mesaj });
+
+            return Ok(new { message = result.Mesaj });
+        }
+
+        /// <summary>
+        /// Redo last undone command for current user
+        /// POST /api/cargo/redo
+        /// </summary>
+        [Authorize]
+        [HttpPost("redo")]
+        public async Task<IActionResult> Redo()
+        {
+            var userId = GetUserId();
+            if (userId == null)
+                return Unauthorized(new { message = "Session not found." });
+
+            var result = await _invoker.RedoLastCommand(userId.Value);
+            if (!result.Basarili)
+                return BadRequest(new { message = result.Mesaj });
+
+            return Ok(new { message = result.Mesaj });
+        }
+
+        /// <summary>
+        /// Get undo/redo availability for current user
+        /// GET /api/cargo/history-status
+        /// </summary>
+        [Authorize]
+        [HttpGet("history-status")]
+        public IActionResult HistoryStatus()
+        {
+            var userId = GetUserId();
+            if (userId == null)
+                return Unauthorized(new { message = "Session not found." });
+
+            var (canUndo, canRedo) = _invoker.GetStatus(userId.Value);
+            return Ok(new { canUndo, canRedo });
         }
 
         /// <summary>
@@ -190,9 +235,9 @@ namespace LogiTechAPI.Controllers
         {
             return Ok(new
             {
-                status = "Healthy ✅",
+                status = "Healthy",
                 time = DateTime.Now,
-                version = "3.0.0"
+                version = "3.1.0"
             });
         }
 

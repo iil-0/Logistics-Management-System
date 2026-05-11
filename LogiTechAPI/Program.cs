@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using LogiTechAPI.Factory;
 using LogiTechAPI.Services;
+using LogiTechAPI.Command;
 using Microsoft.EntityFrameworkCore;
 using LogiTechAPI.Data;
 using LogiTechAPI.Settings;
@@ -11,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddSingleton<PaketFactory>();
 builder.Services.AddSingleton<ObserverRegistry>();
+builder.Services.AddSingleton<KargoCommandInvoker>();   // Per-user undo/redo stack
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<GonderiService>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));

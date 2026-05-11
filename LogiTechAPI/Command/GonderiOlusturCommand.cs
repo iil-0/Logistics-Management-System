@@ -3,17 +3,17 @@ using LogiTechAPI.Factory;
 using LogiTechAPI.Decorator;
 using LogiTechAPI.Strategy;
 using LogiTechAPI.Observer;
-using LogiTechAPI.State;
 using LogiTechAPI.Services;
 using LogiTechAPI.Settings;
 using LogiTechAPI.DTOs.Requests;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LogiTechAPI.Command
 {
     public class GonderiOlusturCommand : IKargoCommand
     {
-        private readonly PaketFactory _factory;
-        private readonly GonderiService _gonderiService;
+        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly PaketFactory _factory;             // Singleton — direkt tutmak güvenli
         private readonly ShipmentRequest _request;
         private readonly int _userId;
         private readonly User _user;
@@ -23,15 +23,15 @@ namespace LogiTechAPI.Command
         public string KomutAdi => "Create Shipment";
 
         public GonderiOlusturCommand(
+            IServiceScopeFactory scopeFactory,
             PaketFactory factory,
-            GonderiService gonderiService,
             ShipmentRequest request,
             int userId,
             User user,
             EmailSettings emailSettings)
         {
+            _scopeFactory = scopeFactory;
             _factory = factory;
-            _gonderiService = gonderiService;
             _request = request;
             _userId = userId;
             _user = user;
@@ -42,6 +42,27 @@ namespace LogiTechAPI.Command
         {
             try
             {
+                using var scope = _scopeFactory.CreateScope();
+                var gonderiService = scope.ServiceProvider.GetRequiredService<GonderiService>();
+
+                // REDO durumu: Undo'da silinen gönderiyi aynı TrackingNo ile geri yükle.
+                if (_createdShipment != null)
+                {
+                    _createdShipment.Id = 0;
+                    foreach (var h in _createdShipment.StatusHistory) h.Id = 0;
+
+                    gonderiService.AddObserver(_createdShipment.TrackingNo, new NotificationObserver());
+                    if (!string.IsNullOrWhiteSpace(_user.Email))
+                    {
+                        gonderiService.AddObserver(
+                            _createdShipment.TrackingNo,
+                            new EmailObserver(_user.Email, _createdShipment.TrackingNo, _emailSettings));
+                    }
+
+                    await gonderiService.AddShipment(_createdShipment);
+                    return new KomutSonuc { Basarili = true, Mesaj = "Shipment re-created!", Gonderi = _createdShipment };
+                }
+
                 // 1. Factory
                 IPaket paket = _factory.CreatePackage(_request.PackageType);
 
@@ -81,25 +102,25 @@ namespace LogiTechAPI.Command
                 };
 
                 // 5. State & Observer
-                _gonderiService.AddObserver(shipment.TrackingNo, new NotificationObserver());
+                gonderiService.AddObserver(shipment.TrackingNo, new NotificationObserver());
 
                 if (!string.IsNullOrWhiteSpace(_user.Email))
                 {
-                    _gonderiService.AddObserver(
+                    gonderiService.AddObserver(
                         shipment.TrackingNo,
                         new EmailObserver(_user.Email, shipment.TrackingNo, _emailSettings));
                 }
 
                 shipment.Status = "Order Received";
-                shipment.StatusHistory.Add(new StatusHistory 
-                { 
-                    Status = shipment.Status, 
+                shipment.StatusHistory.Add(new StatusHistory
+                {
+                    Status = shipment.Status,
                     Message = "Shipment created successfully.",
                     Date = DateTime.UtcNow
                 });
 
                 // 6. Save
-                await _gonderiService.AddShipment(shipment);
+                await gonderiService.AddShipment(shipment);
                 _createdShipment = shipment;
 
                 return new KomutSonuc { Basarili = true, Mesaj = "Shipment created successfully!", Gonderi = shipment };
@@ -113,12 +134,15 @@ namespace LogiTechAPI.Command
 
         public async Task<KomutSonuc> Undo()
         {
-            if (_createdShipment != null)
-            {
-                await _gonderiService.DeleteShipment(_createdShipment.TrackingNo);
-                return new KomutSonuc { Basarili = true, Mesaj = "Shipment creation undone!" };
-            }
-            return new KomutSonuc { Basarili = false, Mesaj = "Nothing to undo!" };
+            if (_createdShipment == null)
+                return new KomutSonuc { Basarili = false, Mesaj = "Nothing to undo!" };
+
+            using var scope = _scopeFactory.CreateScope();
+            var gonderiService = scope.ServiceProvider.GetRequiredService<GonderiService>();
+
+            gonderiService.RemoveObservers(_createdShipment.TrackingNo);
+            await gonderiService.DeleteShipment(_createdShipment.TrackingNo);
+            return new KomutSonuc { Basarili = true, Mesaj = "Shipment creation undone!" };
         }
     }
 }

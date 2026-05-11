@@ -28,6 +28,27 @@ namespace LogiTechAPI.Services
             await _context.SaveChangesAsync();
         }
 
+        // Undo akışı için: shipment.Status'u eski değere döndürür ve istenirse
+        // bir StatusHistory satırını da DB'den TAMAMEN siler. Tek transaction
+        // içinde yapılır (tek SaveChanges) — atomik.
+        public async Task<bool> RevertStatus(string trackingNo, string oldStatus, int? historyIdToDelete)
+        {
+            var shipment = await _context.Shipments
+                .FirstOrDefaultAsync(g => g.TrackingNo == trackingNo);
+            if (shipment == null) return false;
+
+            shipment.Status = oldStatus;
+
+            if (historyIdToDelete.HasValue)
+            {
+                var history = await _context.StatusHistories.FindAsync(historyIdToDelete.Value);
+                if (history != null) _context.StatusHistories.Remove(history);
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<Gonderi?> GetByTrackingNo(string trackingNo)
         {
             return await _context.Shipments

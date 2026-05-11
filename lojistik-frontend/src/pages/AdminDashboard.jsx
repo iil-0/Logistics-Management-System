@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import "./AdminDashboard.css";
 
@@ -16,12 +16,10 @@ export default function AdminDashboard() {
   const [shipments, setShipments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [historyStatus, setHistoryStatus] = useState({ canUndo: false, canRedo: false });
+  const [actionLoading, setActionLoading] = useState(false);
 
-  useEffect(() => {
-    fetchShipments();
-  }, []);
-
-  const fetchShipments = async () => {
+  const fetchShipments = useCallback(async () => {
     try {
       const res = await fetch(`${API}/all-shipments`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch shipments.");
@@ -32,7 +30,21 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const fetchHistoryStatus = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/history-status`, { credentials: "include" });
+      if (res.ok) setHistoryStatus(await res.json());
+    } catch {
+      // sessizce geç
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchShipments();
+    fetchHistoryStatus();
+  }, [fetchShipments, fetchHistoryStatus]);
 
   const handleStatusChange = async (trackingNo, targetStatus) => {
     try {
@@ -45,9 +57,8 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Update failed.");
 
-      setShipments((prev) =>
-        prev.map((s) => (s.trackingNo === trackingNo ? data : s))
-      );
+      await fetchShipments();
+      await fetchHistoryStatus();
     } catch (err) {
       alert(err.message);
     }
@@ -59,10 +70,34 @@ export default function AdminDashboard() {
     handleStatusChange(trackingNo, STATUS_ORDER[currentIndex + 1]);
   };
 
-  const handlePrevStatus = (trackingNo, currentStatus) => {
-    const currentIndex = STATUS_ORDER.indexOf(currentStatus);
-    if (currentIndex <= 0) return;
-    handleStatusChange(trackingNo, STATUS_ORDER[currentIndex - 1]);
+  const handleUndo = async () => {
+    setActionLoading(true);
+    try {
+      const res = await fetch(`${API}/undo`, { method: "POST", credentials: "include" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || `Undo failed (HTTP ${res.status}).`);
+      await fetchShipments();
+      await fetchHistoryStatus();
+    } catch (err) {
+      alert(err.message || "Undo failed.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRedo = async () => {
+    setActionLoading(true);
+    try {
+      const res = await fetch(`${API}/redo`, { method: "POST", credentials: "include" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || `Redo failed (HTTP ${res.status}).`);
+      await fetchShipments();
+      await fetchHistoryStatus();
+    } catch (err) {
+      alert(err.message || "Redo failed.");
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const statusColor = (status) => {
@@ -84,6 +119,39 @@ export default function AdminDashboard() {
       <div className="page-header">
         <h1>👑 Admin Dashboard</h1>
         <p>Manage all system shipments and update delivery statuses</p>
+      </div>
+
+      <div className="undo-redo-bar" style={{ display: "flex", gap: "10px", marginBottom: "1.5rem", justifyContent: "flex-end" }}>
+        <button
+          onClick={handleUndo}
+          disabled={!historyStatus.canUndo || actionLoading}
+          title="Undo last action"
+          style={{
+            padding: "0.5rem 1rem",
+            borderRadius: "6px",
+            border: "1px solid #6b7280",
+            background: historyStatus.canUndo ? "#374151" : "#1f2937",
+            color: historyStatus.canUndo ? "white" : "#6b7280",
+            cursor: historyStatus.canUndo && !actionLoading ? "pointer" : "not-allowed"
+          }}
+        >
+          ↶ Undo
+        </button>
+        <button
+          onClick={handleRedo}
+          disabled={!historyStatus.canRedo || actionLoading}
+          title="Redo last undone action"
+          style={{
+            padding: "0.5rem 1rem",
+            borderRadius: "6px",
+            border: "1px solid #6b7280",
+            background: historyStatus.canRedo ? "#374151" : "#1f2937",
+            color: historyStatus.canRedo ? "white" : "#6b7280",
+            cursor: historyStatus.canRedo && !actionLoading ? "pointer" : "not-allowed"
+          }}
+        >
+          ↷ Redo
+        </button>
       </div>
 
       <div className="admin-stats">
@@ -134,17 +202,8 @@ export default function AdminDashboard() {
                 </td>
                 <td>
                   <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                    {s.status !== "Cancelled" && STATUS_ORDER.indexOf(s.status) > 0 && (
-                      <button 
-                        className="btn-next"
-                        style={{ backgroundColor: "#6b7280" }}
-                        onClick={() => handlePrevStatus(s.trackingNo, s.status)}
-                      >
-                        🡄 Prev
-                      </button>
-                    )}
                     {s.status !== "Delivered" && s.status !== "Cancelled" && (
-                      <button 
+                      <button
                         className="btn-next"
                         onClick={() => handleNextStatus(s.trackingNo, s.status)}
                       >

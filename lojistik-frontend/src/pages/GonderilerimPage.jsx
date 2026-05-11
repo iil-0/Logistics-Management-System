@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import "./GonderilerimPage.css";
 
@@ -7,38 +7,79 @@ const API = "http://localhost:5085/api/cargo";
 export default function GonderilerimPage() {
   const [gonderiler, setGonderiler] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [historyStatus, setHistoryStatus] = useState({ canUndo: false, canRedo: false });
+  const [actionLoading, setActionLoading] = useState(false);
 
-  useEffect(() => {
-    fetch(`${API}/my-shipments`, { credentials: "include" })
-      .then((res) => res.json())
-      .then((data) => setGonderiler(data))
-      .catch(() => setGonderiler([]))
-      .finally(() => setLoading(false));
+  const fetchShipments = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/my-shipments`, { credentials: "include" });
+      const data = await res.json();
+      setGonderiler(data);
+    } catch {
+      setGonderiler([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const handleIptal = async (trackingNo) => {
-    // if (!window.confirm("Are you sure you want to cancel this shipment?")) return;
-
+  const fetchHistoryStatus = useCallback(async () => {
     try {
-      // Show loading state or immediate feedback if desired
+      const res = await fetch(`${API}/history-status`, { credentials: "include" });
+      if (res.ok) setHistoryStatus(await res.json());
+    } catch {
+      // sessizce geç
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchShipments();
+    fetchHistoryStatus();
+  }, [fetchShipments, fetchHistoryStatus]);
+
+  const handleIptal = async (trackingNo) => {
+    try {
       const res = await fetch(`${API}/cancel/${trackingNo}`, {
         method: "POST",
         credentials: "include",
       });
-      
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.message || "Cancellation failed.");
       }
-
-      const updatedShipment = await res.json();
-      setGonderiler((prev) =>
-        prev.map((g) => (g.trackingNo === trackingNo ? updatedShipment : g))
-      );
-      alert("Shipment cancelled successfully.");
+      await fetchShipments();
+      await fetchHistoryStatus();
     } catch (err) {
-      console.error(err);
       alert(err.message || "An error occurred during cancellation.");
+    }
+  };
+
+  const handleUndo = async () => {
+    setActionLoading(true);
+    try {
+      const res = await fetch(`${API}/undo`, { method: "POST", credentials: "include" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || `Undo failed (HTTP ${res.status}).`);
+      await fetchShipments();
+      await fetchHistoryStatus();
+    } catch (err) {
+      alert(err.message || "Undo failed.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRedo = async () => {
+    setActionLoading(true);
+    try {
+      const res = await fetch(`${API}/redo`, { method: "POST", credentials: "include" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || `Redo failed (HTTP ${res.status}).`);
+      await fetchShipments();
+      await fetchHistoryStatus();
+    } catch (err) {
+      alert(err.message || "Redo failed.");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -62,6 +103,39 @@ export default function GonderilerimPage() {
       <div className="page-header">
         <h1>📋 My Shipments</h1>
         <p>You can track all your shipments from here</p>
+      </div>
+
+      <div className="undo-redo-bar" style={{ display: "flex", gap: "10px", marginBottom: "1.5rem", justifyContent: "flex-end" }}>
+        <button
+          onClick={handleUndo}
+          disabled={!historyStatus.canUndo || actionLoading}
+          title="Undo last action"
+          style={{
+            padding: "0.5rem 1rem",
+            borderRadius: "6px",
+            border: "1px solid #6b7280",
+            background: historyStatus.canUndo ? "#374151" : "#1f2937",
+            color: historyStatus.canUndo ? "white" : "#6b7280",
+            cursor: historyStatus.canUndo && !actionLoading ? "pointer" : "not-allowed"
+          }}
+        >
+          ↶ Undo
+        </button>
+        <button
+          onClick={handleRedo}
+          disabled={!historyStatus.canRedo || actionLoading}
+          title="Redo last undone action"
+          style={{
+            padding: "0.5rem 1rem",
+            borderRadius: "6px",
+            border: "1px solid #6b7280",
+            background: historyStatus.canRedo ? "#374151" : "#1f2937",
+            color: historyStatus.canRedo ? "white" : "#6b7280",
+            cursor: historyStatus.canRedo && !actionLoading ? "pointer" : "not-allowed"
+          }}
+        >
+          ↷ Redo
+        </button>
       </div>
 
       {gonderiler.length === 0 ? (
