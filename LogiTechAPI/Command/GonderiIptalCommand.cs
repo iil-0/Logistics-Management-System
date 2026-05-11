@@ -1,6 +1,9 @@
 using LogiTechAPI.Models;
+using LogiTechAPI.Observer;
 using LogiTechAPI.Services;
+using LogiTechAPI.Settings;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace LogiTechAPI.Command
 {
@@ -23,6 +26,7 @@ namespace LogiTechAPI.Command
         {
             using var scope = _scopeFactory.CreateScope();
             var gonderiService = scope.ServiceProvider.GetRequiredService<GonderiService>();
+            var emailSettings = scope.ServiceProvider.GetRequiredService<IOptions<EmailSettings>>().Value;
 
             var shipment = await gonderiService.GetByTrackingNo(_trackingNo);
             if (shipment == null) return new KomutSonuc { Basarili = false, Mesaj = "Shipment not found!" };
@@ -40,6 +44,16 @@ namespace LogiTechAPI.Command
                 Date = DateTime.UtcNow
             };
             shipment.StatusHistory.Add(history);
+
+            // Observer'ları taze kaydet (restart sonrası registry boş olabilir)
+            gonderiService.RemoveObservers(_trackingNo);
+            gonderiService.AddObserver(_trackingNo, new NotificationObserver());
+            if (!string.IsNullOrWhiteSpace(shipment.SenderEmail))
+            {
+                gonderiService.AddObserver(_trackingNo, new EmailObserver(shipment.SenderEmail, _trackingNo, emailSettings));
+            }
+
+            gonderiService.NotifyObservers(_trackingNo, "Your shipment has been cancelled.", "Cancelled");
 
             await gonderiService.UpdateShipment(shipment);
 

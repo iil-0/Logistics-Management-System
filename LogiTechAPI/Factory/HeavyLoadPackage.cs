@@ -1,3 +1,5 @@
+// Concrete Component — Factory'nin ürettiği 50kg+ endüstriyel paket (250 TL).
+// En pahalı baz fiyat: forklift, palet, özel araç gerektirir.
 namespace LogiTechAPI.Factory
 {
     public class HeavyLoadPackage : IPaket

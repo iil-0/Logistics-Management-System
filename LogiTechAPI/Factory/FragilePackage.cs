@@ -1,3 +1,5 @@
+// Concrete Component — Factory'nin ürettiği kırılgan eşya paketi (120 TL).
+// Ekstra paketleme maliyeti yansıtılır.
 namespace LogiTechAPI.Factory
 {
     public class FragilePackage : IPaket

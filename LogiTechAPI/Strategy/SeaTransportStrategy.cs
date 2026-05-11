@@ -1,3 +1,4 @@
+// Concrete Strategy — Deniz yolu. En ucuz, en yavaş: yalnızca %10 ek ücret.
 namespace LogiTechAPI.Strategy
 {
     public class SeaTransportStrategy : ITransportStrategy

@@ -1,3 +1,4 @@
+// Concrete State — kargo araçta, alıcı adresine doğru hareket halinde.
 namespace LogiTechAPI.State
 {
     public class OnTheWayStatus : IGonderiDurum

@@ -1,3 +1,6 @@
+// Concrete Observer — durum değişikliklerini SMTP üzerinden e-posta olarak gönderir.
+// Subject (ObserverRegistry) bu observer'ı Update() ile çağırır; iş arka plan
+// thread'inde yapılır ki HTTP cevabı SMTP'yi beklemesin.
 using System.Net;
 using System.Net.Mail;
 using LogiTechAPI.Settings;
@@ -17,8 +20,10 @@ namespace LogiTechAPI.Observer
             _settings = settings;
         }
 
+        // Subject çağırır → fire-and-forget arka plan göndermi başlatır
         public void Update(string message, string status)
         {
+            Console.WriteLine($"[EmailObserver] Update triggered: to={_recipientEmail}, tracking={_trackingNo}, status={status}");
             _ = Task.Run(() => SendEmail(message, status));
         }
 
@@ -26,10 +31,11 @@ namespace LogiTechAPI.Observer
         {
             try
             {
+                Console.WriteLine($"[EmailObserver] Connecting to SMTP {_settings.SmtpHost}:{_settings.SmtpPort} as {_settings.SenderEmail}");
                 using var client = new SmtpClient(_settings.SmtpHost, _settings.SmtpPort)
                 {
                     Credentials = new NetworkCredential(_settings.SenderEmail, _settings.AppPassword),
-                    EnableSsl = true
+                    EnableSsl = true                        // Gmail için STARTTLS zorunlu
                 };
 
                 var mail = new MailMessage
@@ -42,10 +48,13 @@ namespace LogiTechAPI.Observer
                 mail.To.Add(_recipientEmail);
 
                 client.Send(mail);
+                Console.WriteLine($"[EmailObserver] SUCCESS: email sent to {_recipientEmail} for {_trackingNo}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[EmailObserver] Failed to send email: {ex.Message}");
+                Console.WriteLine($"[EmailObserver] FAILED: to={_recipientEmail}, error={ex.GetType().Name}: {ex.Message}");
+                if (ex.InnerException != null)
+                    Console.WriteLine($"[EmailObserver]   inner: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
             }
         }
     }

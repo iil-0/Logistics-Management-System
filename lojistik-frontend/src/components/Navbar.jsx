@@ -50,7 +50,7 @@ export default function Navbar() {
             >
               Track Shipment
             </Link>
-            {user && (
+            {user && user.role !== "Admin" && (
               <Link
                 to="/my-shipments"
                 className={`nav-link ${isActive("/my-shipments") ? "active" : ""}`}

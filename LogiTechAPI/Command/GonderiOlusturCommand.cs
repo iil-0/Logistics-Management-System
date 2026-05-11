@@ -60,6 +60,12 @@ namespace LogiTechAPI.Command
                     }
 
                     await gonderiService.AddShipment(_createdShipment);
+
+                    gonderiService.NotifyObservers(
+                        _createdShipment.TrackingNo,
+                        $"Your shipment {_createdShipment.TrackingNo} has been re-created. Total: ₺{_createdShipment.TotalPrice}.",
+                        "Order Received");
+
                     return new KomutSonuc { Basarili = true, Mesaj = "Shipment re-created!", Gonderi = _createdShipment };
                 }
 
@@ -122,6 +128,12 @@ namespace LogiTechAPI.Command
                 // 6. Save
                 await gonderiService.AddShipment(shipment);
                 _createdShipment = shipment;
+
+                // 7. Notify — kullanıcıya "kargon başarıyla oluşturuldu" maili gönder
+                gonderiService.NotifyObservers(
+                    shipment.TrackingNo,
+                    $"Your shipment {shipment.TrackingNo} has been created successfully. Total: ₺{shipment.TotalPrice}.",
+                    "Order Received");
 
                 return new KomutSonuc { Basarili = true, Mesaj = "Shipment created successfully!", Gonderi = shipment };
             }

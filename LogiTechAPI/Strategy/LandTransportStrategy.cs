@@ -1,3 +1,5 @@
+// Concrete Strategy — Kara yolu. Hız/fiyat dengesi orta, %20 ek ücret.
+// Factory'de varsayılan seçenek.
 namespace LogiTechAPI.Strategy
 {
     public class LandTransportStrategy : ITransportStrategy

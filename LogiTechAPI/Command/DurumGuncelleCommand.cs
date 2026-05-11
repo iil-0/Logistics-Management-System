@@ -1,14 +1,15 @@
 using LogiTechAPI.Models;
+using LogiTechAPI.Observer;
 using LogiTechAPI.Services;
+using LogiTechAPI.Settings;
 using LogiTechAPI.State;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace LogiTechAPI.Command
 {
     public class DurumGuncelleCommand : IKargoCommand
     {
-        // GonderiService yerine ScopeFactory tutuyoruz — Singleton Invoker
-        // bizi DI ömür problemlerinden korur. Her Execute/Undo TAZE scope açar.
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly string _trackingNo;
         private readonly string _newStatus;
@@ -28,6 +29,7 @@ namespace LogiTechAPI.Command
         {
             using var scope = _scopeFactory.CreateScope();
             var gonderiService = scope.ServiceProvider.GetRequiredService<GonderiService>();
+            var emailSettings = scope.ServiceProvider.GetRequiredService<IOptions<EmailSettings>>().Value;
 
             var shipment = await gonderiService.GetByTrackingNo(_trackingNo);
             if (shipment == null) return new KomutSonuc { Basarili = false, Mesaj = "Shipment not found!" };
@@ -44,6 +46,16 @@ namespace LogiTechAPI.Command
                 Date = DateTime.UtcNow
             };
             shipment.StatusHistory.Add(newHistory);
+
+            // Observer'ları taze kaydet — backend restart sonrası Singleton
+            // ObserverRegistry boşalmış olabilir, bu yüzden her status değişiminde
+            // observer listesini gönderici bilgisinden yeniden inşa ediyoruz.
+            gonderiService.RemoveObservers(_trackingNo);
+            gonderiService.AddObserver(_trackingNo, new NotificationObserver());
+            if (!string.IsNullOrWhiteSpace(shipment.SenderEmail))
+            {
+                gonderiService.AddObserver(_trackingNo, new EmailObserver(shipment.SenderEmail, _trackingNo, emailSettings));
+            }
 
             gonderiService.NotifyObservers(_trackingNo, $"Status updated from {_oldStatus} to {statusObject.StatusName}", statusObject.StatusName);
 

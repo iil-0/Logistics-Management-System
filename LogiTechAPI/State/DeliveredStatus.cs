@@ -1,3 +1,5 @@
+// Concrete State — mutlu yol sonu, TERMİNAL durum.
+// NextStatus() null döner çünkü teslim sonrası başka durum yok.
 namespace LogiTechAPI.State
 {
     public class DeliveredStatus : IGonderiDurum

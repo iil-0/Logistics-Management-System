@@ -1,3 +1,4 @@
+// Concrete Strategy — Hava yolu. En hızlı, en pahalı: baz fiyatın %80'i ek ücret.
 namespace LogiTechAPI.Strategy
 {
     public class AirTransportStrategy : ITransportStrategy

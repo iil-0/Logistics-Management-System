@@ -1,3 +1,5 @@
+// Concrete State — alternatif TERMİNAL durum.
+// Linear NextStatus akışına dahil değil; GonderiIptalCommand tarafından zorla atanır.
 namespace LogiTechAPI.State
 {
     public class CancelledStatus : IGonderiDurum

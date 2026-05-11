@@ -70,6 +70,21 @@ export default function AdminDashboard() {
     handleStatusChange(trackingNo, STATUS_ORDER[currentIndex + 1]);
   };
 
+  const handleCancel = async (trackingNo) => {
+    try {
+      const res = await fetch(`${API}/cancel/${trackingNo}`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || `Cancellation failed (HTTP ${res.status}).`);
+      await fetchShipments();
+      await fetchHistoryStatus();
+    } catch (err) {
+      alert(err.message || "Cancellation failed.");
+    }
+  };
+
   const handleUndo = async () => {
     setActionLoading(true);
     try {
@@ -208,6 +223,22 @@ export default function AdminDashboard() {
                         onClick={() => handleNextStatus(s.trackingNo, s.status)}
                       >
                         Next 🡆
+                      </button>
+                    )}
+                    {s.isCancellable && (
+                      <button
+                        onClick={() => handleCancel(s.trackingNo)}
+                        style={{
+                          backgroundColor: "#ef4444",
+                          color: "white",
+                          border: "none",
+                          padding: "0.5rem 0.85rem",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          fontSize: "0.875rem"
+                        }}
+                      >
+                        Cancel
                       </button>
                     )}
                   </div>

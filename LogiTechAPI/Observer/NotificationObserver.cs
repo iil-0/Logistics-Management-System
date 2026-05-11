@@ -1,3 +1,6 @@
+// Concrete Observer — bellek-içi log gözlemcisi.
+// Gerçek bir kanal kullanmaz; gelen bildirimleri zaman damgalı listede tutar.
+// Debug/test için faydalı, üretimde DB log'u veya gerçek bir kanal tercih edilir.
 namespace LogiTechAPI.Observer
 {
     public class NotificationObserver : IShipmentObserver

@@ -1,3 +1,5 @@
+// Concrete State — kargo depoda paketlenip taşıyıcıya hazırlanıyor.
+// Paketleme başladığı için iptal edilemez (iş kuralı).
 namespace LogiTechAPI.State
 {
     public class PreparingStatus : IGonderiDurum

@@ -1,3 +1,6 @@
+// DB ile State pattern arasındaki köprü. DB'de Status string olarak saklanır;
+// bu fabrika string'i alıp uygun IGonderiDurum nesnesine çevirir.
+// Command'lar (DurumGuncelle, GonderiIptal) ve Controller (IsCancellable flag'i) kullanır.
 namespace LogiTechAPI.State
 {
     public static class GonderiDurumFactory
@@ -11,7 +14,7 @@ namespace LogiTechAPI.State
                 "on the way" or "yolda"             => new OnTheWayStatus(),
                 "delivered" or "teslim edildi"      => new DeliveredStatus(),
                 "cancelled" or "iptal edildi"       => new CancelledStatus(),
-                _                                   => new OrderReceivedStatus()
+                _                                   => new OrderReceivedStatus()  // Veri bozulmasına karşı güvenli varsayılan
             };
         }
     }

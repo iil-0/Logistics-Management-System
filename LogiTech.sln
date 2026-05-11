@@ -1,0 +1,65 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogiTechAPI", "LogiTechAPI\LogiTechAPI.csproj", "{23327555-3D12-8D83-8B2F-FAC8C2D0CE6F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".claude", ".claude", "{0AE7C77C-1A1D-D779-8C60-7AB6E4421D01}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "worktrees", "worktrees", "{79802797-6956-8DCE-3D78-6FFCDB44B84D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "jolly-shaw-b8b3f8", "jolly-shaw-b8b3f8", "{2C0F11F5-ECC4-16E4-3758-AA02336DA383}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataMigrator", ".claude\worktrees\jolly-shaw-b8b3f8\DataMigrator\DataMigrator.csproj", "{49D2C268-8BF5-D08D-397F-1C6D8AA1AA86}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogiTechAPI", ".claude\worktrees\jolly-shaw-b8b3f8\LogiTechAPI\LogiTechAPI.csproj", "{61C2BD4B-53EB-D28F-7B06-1F9CCE4D324C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sharp-carson-1d1e86", "sharp-carson-1d1e86", "{884C5E80-E343-EDB7-D891-F096568C5229}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataMigrator", ".claude\worktrees\sharp-carson-1d1e86\DataMigrator\DataMigrator.csproj", "{6762CBD1-D77E-1616-B35C-9AF759C3811E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogiTechAPI", ".claude\worktrees\sharp-carson-1d1e86\LogiTechAPI\LogiTechAPI.csproj", "{82FC1ADA-61E9-2539-FA85-38BE08FD27E6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{23327555-3D12-8D83-8B2F-FAC8C2D0CE6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23327555-3D12-8D83-8B2F-FAC8C2D0CE6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23327555-3D12-8D83-8B2F-FAC8C2D0CE6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23327555-3D12-8D83-8B2F-FAC8C2D0CE6F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49D2C268-8BF5-D08D-397F-1C6D8AA1AA86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49D2C268-8BF5-D08D-397F-1C6D8AA1AA86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49D2C268-8BF5-D08D-397F-1C6D8AA1AA86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49D2C268-8BF5-D08D-397F-1C6D8AA1AA86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61C2BD4B-53EB-D28F-7B06-1F9CCE4D324C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61C2BD4B-53EB-D28F-7B06-1F9CCE4D324C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61C2BD4B-53EB-D28F-7B06-1F9CCE4D324C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61C2BD4B-53EB-D28F-7B06-1F9CCE4D324C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6762CBD1-D77E-1616-B35C-9AF759C3811E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6762CBD1-D77E-1616-B35C-9AF759C3811E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6762CBD1-D77E-1616-B35C-9AF759C3811E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6762CBD1-D77E-1616-B35C-9AF759C3811E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82FC1ADA-61E9-2539-FA85-38BE08FD27E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82FC1ADA-61E9-2539-FA85-38BE08FD27E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82FC1ADA-61E9-2539-FA85-38BE08FD27E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82FC1ADA-61E9-2539-FA85-38BE08FD27E6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{79802797-6956-8DCE-3D78-6FFCDB44B84D} = {0AE7C77C-1A1D-D779-8C60-7AB6E4421D01}
+		{2C0F11F5-ECC4-16E4-3758-AA02336DA383} = {79802797-6956-8DCE-3D78-6FFCDB44B84D}
+		{49D2C268-8BF5-D08D-397F-1C6D8AA1AA86} = {2C0F11F5-ECC4-16E4-3758-AA02336DA383}
+		{61C2BD4B-53EB-D28F-7B06-1F9CCE4D324C} = {2C0F11F5-ECC4-16E4-3758-AA02336DA383}
+		{884C5E80-E343-EDB7-D891-F096568C5229} = {79802797-6956-8DCE-3D78-6FFCDB44B84D}
+		{6762CBD1-D77E-1616-B35C-9AF759C3811E} = {884C5E80-E343-EDB7-D891-F096568C5229}
+		{82FC1ADA-61E9-2539-FA85-38BE08FD27E6} = {884C5E80-E343-EDB7-D891-F096568C5229}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {618DB3BD-355F-4607-B283-A8A82B7EC939}
+	EndGlobalSection
+EndGlobal

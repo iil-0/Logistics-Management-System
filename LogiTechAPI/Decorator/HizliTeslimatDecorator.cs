@@ -1,3 +1,5 @@
+// Concrete Decorator — paketin fiyatına 100 TL hızlı teslimat ücreti ekler.
+// Sigorta ile birlikte zincirlenebilir: HizliTeslimat(Sigorta(Fragile)) → 120+75+100 = 295 TL.
 using LogiTechAPI.Factory;
 
 namespace LogiTechAPI.Decorator
