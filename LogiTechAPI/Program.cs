@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using LogiTechAPI.Factory;
 using LogiTechAPI.Services;
 using LogiTechAPI.Command;
+using LogiTechAPI.Observer;
 using Microsoft.EntityFrameworkCore;
 using LogiTechAPI.Data;
 using LogiTechAPI.Settings;

@@ -1,10 +1,9 @@
-// Observer pattern'in SUBJECT'i. Her trackingNo için kayıtlı gözlemcileri tutar
-// ve durum değiştiğinde hepsini sırayla Update eder.
+// Observer pattern'in SUBJECT'i (yayın yapan). Her trackingNo için kayıtlı
+// gözlemcileri tutar ve durum değiştiğinde hepsini sırayla Update eder.
 // Singleton — DI'da AddSingleton ile kayıtlı; tüm istekler aynı listeyi paylaşır.
 using System.Collections.Concurrent;
-using LogiTechAPI.Observer;
 
-namespace LogiTechAPI.Services
+namespace LogiTechAPI.Observer
 {
     public class ObserverRegistry
     {
