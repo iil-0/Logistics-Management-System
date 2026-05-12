@@ -1,3 +1,6 @@
+// /api/cargo altındaki tüm HTTP endpoint'leri. Command pattern'in CLIENT'ı:
+// HTTP isteğini komut nesnesine sarıp Invoker'a verir. State pattern'i de
+// MapShipmentResponse içinde IsCancellable hesaplamak için kullanır.
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,13 +21,14 @@ namespace LogiTechAPI.Controllers
     [Route("api/cargo")]
     public class KargoController : ControllerBase
     {
-        private readonly PaketFactory _factory;
-        private readonly GonderiService _gonderiService;
+        // Tüm bağımlılıklar DI ile yapıcıya enjekte edilir
+        private readonly PaketFactory _factory;                 // Factory: paket üretimi
+        private readonly GonderiService _gonderiService;        // RECEIVER + sorgu işleri
         private readonly UserService _userService;
         private readonly ILogger<KargoController> _logger;
         private readonly EmailSettings _emailSettings;
-        private readonly KargoCommandInvoker _invoker;
-        private readonly IServiceScopeFactory _scopeFactory; // Komutlar Singleton stack'te yaşar; her execute/undo'da TAZE GonderiService gerekir
+        private readonly KargoCommandInvoker _invoker;          // INVOKER (Singleton — per-user undo stack)
+        private readonly IServiceScopeFactory _scopeFactory;    // Komutlara TAZE scope açtırır (captive dep önlemi)
 
         public KargoController(
             PaketFactory factory,
@@ -44,10 +48,7 @@ namespace LogiTechAPI.Controllers
             _scopeFactory = scopeFactory;
         }
 
-        /// <summary>
-        /// Create shipment (uses Command Pattern)
-        /// POST /api/cargo/create-shipment
-        /// </summary>
+        // POST /api/cargo/create-shipment — Yeni kargo (CLIENT rolü)
         [Authorize]
         [HttpPost("create-shipment")]
         public async Task<IActionResult> CreateShipment([FromBody] ShipmentRequest request)
@@ -63,9 +64,9 @@ namespace LogiTechAPI.Controllers
             if (user == null)
                 return Unauthorized(new { message = "User not found." });
 
+            // CLIENT — komutu yarat, Invoker'a teslim et. Invoker bunu undo stack'ine koyar.
             var command = new GonderiOlusturCommand(
                 _scopeFactory, _factory, request, userId.Value, user, _emailSettings);
-
             var result = await _invoker.ExecuteCommand(userId.Value, command);
 
             if (!result.Basarili)
@@ -74,10 +75,7 @@ namespace LogiTechAPI.Controllers
             return Ok(MapShipmentResponse((Gonderi)result.Gonderi!));
         }
 
-        /// <summary>
-        /// List user shipments
-        /// GET /api/cargo/my-shipments
-        /// </summary>
+        // GET /api/cargo/my-shipments — Kullanıcının kendi kargoları
         [Authorize]
         [HttpGet("my-shipments")]
         public async Task<IActionResult> MyShipments()
@@ -87,29 +85,19 @@ namespace LogiTechAPI.Controllers
                 return Unauthorized(new { message = "Session not found." });
 
             var shipments = await _gonderiService.GetUserShipments(userId.Value);
-            var response = shipments.Select(MapShipmentResponse).ToList();
-
-            return Ok(response);
+            return Ok(shipments.Select(MapShipmentResponse).ToList());
         }
 
-        /// <summary>
-        /// List ALL shipments (Admin Only)
-        /// GET /api/cargo/all-shipments
-        /// </summary>
+        // GET /api/cargo/all-shipments — Tüm kargolar (sadece Admin)
         [Authorize(Roles = "Admin")]
         [HttpGet("all-shipments")]
         public async Task<IActionResult> AllShipments()
         {
             var shipments = await _gonderiService.GetAllShipments();
-            var response = shipments.Select(MapShipmentResponse).ToList();
-
-            return Ok(response);
+            return Ok(shipments.Select(MapShipmentResponse).ToList());
         }
 
-        /// <summary>
-        /// Track shipment with tracking number
-        /// GET /api/cargo/track/{trackingNo}
-        /// </summary>
+        // GET /api/cargo/track/{trackingNo} — Anonim erişim, herkes takip edebilir
         [HttpGet("track/{trackingNo}")]
         public async Task<IActionResult> Track(string trackingNo)
         {
@@ -120,10 +108,7 @@ namespace LogiTechAPI.Controllers
             return Ok(MapShipmentResponse(shipment));
         }
 
-        /// <summary>
-        /// Advance shipment status (Command Pattern) - Admin Only
-        /// POST /api/cargo/update-status/{trackingNo}
-        /// </summary>
+        // POST /api/cargo/update-status/{trackingNo} — Status ilerletme (Admin)
         [Authorize(Roles = "Admin")]
         [HttpPost("update-status/{trackingNo}")]
         public async Task<IActionResult> UpdateStatus(string trackingNo, [FromBody] string nextStatus)
@@ -132,6 +117,7 @@ namespace LogiTechAPI.Controllers
             if (userId == null)
                 return Unauthorized(new { message = "Session not found." });
 
+            // CLIENT — DurumGuncelleCommand'ı invoker'a ver
             var command = new DurumGuncelleCommand(_scopeFactory, trackingNo, nextStatus);
             var result = await _invoker.ExecuteCommand(userId.Value, command);
 
@@ -142,10 +128,7 @@ namespace LogiTechAPI.Controllers
             return Ok(MapShipmentResponse(shipment!));
         }
 
-        /// <summary>
-        /// Cancel shipment (Command Pattern)
-        /// POST /api/cargo/cancel/{trackingNo}
-        /// </summary>
+        // POST /api/cargo/cancel/{trackingNo} — İptal (sahibi VEYA admin)
         [Authorize]
         [HttpPost("cancel/{trackingNo}")]
         public async Task<IActionResult> CancelShipment(string trackingNo)
@@ -159,10 +142,11 @@ namespace LogiTechAPI.Controllers
                 return Unauthorized(new { message = "Session not found." });
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
-            // Check if current user is owner OR admin
+            // Ownership-based authorization — rol kontrolü tek başına yeterli değil
             if (shipment.UserId != userId && userRole != "Admin")
                 return Forbid();
 
+            // CLIENT — iptal komutunu invoker'a ver
             var command = new GonderiIptalCommand(_scopeFactory, trackingNo);
             var result = await _invoker.ExecuteCommand(userId.Value, command);
 
@@ -173,10 +157,7 @@ namespace LogiTechAPI.Controllers
             return Ok(MapShipmentResponse(updatedShipment!));
         }
 
-        /// <summary>
-        /// Undo last command for current user (Command Pattern)
-        /// POST /api/cargo/undo
-        /// </summary>
+        // POST /api/cargo/undo — Son komutu geri al (Command pattern)
         [Authorize]
         [HttpPost("undo")]
         public async Task<IActionResult> Undo()
@@ -192,10 +173,7 @@ namespace LogiTechAPI.Controllers
             return Ok(new { message = result.Mesaj });
         }
 
-        /// <summary>
-        /// Redo last undone command for current user
-        /// POST /api/cargo/redo
-        /// </summary>
+        // POST /api/cargo/redo — Undo edileni yeniden uygula
         [Authorize]
         [HttpPost("redo")]
         public async Task<IActionResult> Redo()
@@ -211,10 +189,7 @@ namespace LogiTechAPI.Controllers
             return Ok(new { message = result.Mesaj });
         }
 
-        /// <summary>
-        /// Get undo/redo availability for current user
-        /// GET /api/cargo/history-status
-        /// </summary>
+        // GET /api/cargo/history-status — Frontend butonları için canUndo/canRedo
         [Authorize]
         [HttpGet("history-status")]
         public IActionResult HistoryStatus()
@@ -227,22 +202,12 @@ namespace LogiTechAPI.Controllers
             return Ok(new { canUndo, canRedo });
         }
 
-        /// <summary>
-        /// API health check
-        /// GET /api/cargo/health
-        /// </summary>
+        // GET /api/cargo/health — Canlılık kontrolü (anonim)
         [HttpGet("health")]
         public IActionResult HealthCheck()
-        {
-            return Ok(new
-            {
-                status = "Healthy",
-                time = DateTime.Now,
-                version = "3.1.0"
-            });
-        }
+            => Ok(new { status = "Healthy", time = DateTime.Now, version = "3.1.0" });
 
-        // ─── Helper Methods ───────────────────────────────────────────────────
+        // ─── Helpers ─────────────────────────────────────────────────────────
 
         private int? GetUserId()
         {
@@ -251,9 +216,10 @@ namespace LogiTechAPI.Controllers
             return null;
         }
 
+        // Entity → DTO. IsCancellable State pattern üzerinden anlık hesaplanır.
         private static ShipmentResponse MapShipmentResponse(Gonderi g)
         {
-            var currentStatus = GonderiDurumFactory.GetStatus(g.Status);
+            var currentStatus = GonderiDurumFactory.GetStatus(g.Status);    // STATE pattern köprüsü
             return new ShipmentResponse
             {
                 Id = g.Id,
@@ -267,7 +233,7 @@ namespace LogiTechAPI.Controllers
                 TransportMethod = g.TransportMethod,
                 TotalPrice = g.TotalPrice,
                 Status = g.Status,
-                IsCancellable = currentStatus.IsCancellable(),
+                IsCancellable = currentStatus.IsCancellable(),               // State'in iş kuralı
                 StatusHistory = g.StatusHistory.Select(d => new StatusHistoryResponse
                 {
                     Status = d.Status,

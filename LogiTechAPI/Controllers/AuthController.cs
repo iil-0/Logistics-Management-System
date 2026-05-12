@@ -1,3 +1,6 @@
+// /api/auth altındaki kimlik doğrulama endpoint'leri.
+// Cookie-based auth + Claims kullanır. Pattern içermez — düz katmanlı mimari.
+// Diğer Controller (KargoController) tasarım desenlerini orkestral eder.
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -14,15 +17,9 @@ namespace LogiTechAPI.Controllers
     {
         private readonly UserService _userService;
 
-        public AuthController(UserService userService)
-        {
-            _userService = userService;
-        }
+        public AuthController(UserService userService) => _userService = userService;
 
-        /// <summary>
-        /// New user registration
-        /// POST /api/auth/register
-        /// </summary>
+        // POST /api/auth/register — Yeni hesap + otomatik giriş
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
@@ -38,27 +35,15 @@ namespace LogiTechAPI.Controllers
                 request.FirstName, request.LastName, request.Email,
                 request.Phone, request.Password);
 
+            // null dönüş = email zaten kayıtlı (UserService kontrolü)
             if (user == null)
                 return BadRequest(new { message = "This email address is already registered." });
 
-            // Auto sign in
-            await SignInUser(user);
-
-            return Ok(new UserResponse
-            {
-                Id = user.Id,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                Phone = user.Phone,
-                Role = user.Role
-            });
+            await SignInUser(user);                                          // Cookie üret → otomatik login
+            return Ok(ToResponse(user));
         }
 
-        /// <summary>
-        /// User login
-        /// POST /api/auth/login
-        /// </summary>
+        // POST /api/auth/login — Email + şifre ile giriş
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -69,26 +54,15 @@ namespace LogiTechAPI.Controllers
             }
 
             var user = await _userService.Login(request.Email, request.Password);
+            // Aynı mesaj — email var/yok bilgisini saldırgana sızdırmamak için
             if (user == null)
                 return Unauthorized(new { message = "Invalid email or password." });
 
             await SignInUser(user);
-
-            return Ok(new UserResponse
-            {
-                Id = user.Id,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                Phone = user.Phone,
-                Role = user.Role
-            });
+            return Ok(ToResponse(user));
         }
 
-        /// <summary>
-        /// Logout
-        /// POST /api/auth/logout
-        /// </summary>
+        // POST /api/auth/logout — Cookie'yi temizle
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
@@ -96,10 +70,7 @@ namespace LogiTechAPI.Controllers
             return Ok(new { message = "Logged out successfully." });
         }
 
-        /// <summary>
-        /// Current user info (cookie validation)
-        /// GET /api/auth/me
-        /// </summary>
+        // GET /api/auth/me — Mevcut oturum kullanıcısı (cookie validation)
         [HttpGet("me")]
         public async Task<IActionResult> Me()
         {
@@ -114,32 +85,23 @@ namespace LogiTechAPI.Controllers
             if (user == null)
                 return Unauthorized(new { message = "User not found." });
 
-            return Ok(new UserResponse
-            {
-                Id = user.Id,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                Phone = user.Phone,
-                Role = user.Role
-            });
+            return Ok(ToResponse(user));
         }
 
+        // Cookie üret + Response'a Set-Cookie header'ı koy
         private async Task SignInUser(Models.User user)
         {
+            // Claim'ler kullanıcıyı tanımlayan key-value çiftleri; cookie içinde şifreli taşınır
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role)
+                new Claim(ClaimTypes.Role, user.Role)                        // RBAC için [Authorize(Roles="...")] okur
             };
 
-            var identity = new ClaimsIdentity(
-                claims, 
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                ClaimTypes.Name,
-                ClaimTypes.Role);
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme,
+                ClaimTypes.Name, ClaimTypes.Role);
             var principal = new ClaimsPrincipal(identity);
 
             await HttpContext.SignInAsync(
@@ -147,9 +109,20 @@ namespace LogiTechAPI.Controllers
                 principal,
                 new AuthenticationProperties
                 {
-                    IsPersistent = true,
+                    IsPersistent = true,                                     // Tarayıcı kapansa da kalır
                     ExpiresUtc = DateTimeOffset.UtcNow.AddHours(24)
                 });
         }
+
+        // PasswordHash sızdırılmaz — User entity'sini direkt dönmek yerine UserResponse kullanılır
+        private static UserResponse ToResponse(Models.User u) => new()
+        {
+            Id = u.Id,
+            FirstName = u.FirstName,
+            LastName = u.LastName,
+            Email = u.Email,
+            Phone = u.Phone,
+            Role = u.Role
+        };
     }
 }

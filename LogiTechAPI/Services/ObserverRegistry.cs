@@ -1,3 +1,6 @@
+// Observer pattern'in SUBJECT'i. Her trackingNo için kayıtlı gözlemcileri tutar
+// ve durum değiştiğinde hepsini sırayla Update eder.
+// Singleton — DI'da AddSingleton ile kayıtlı; tüm istekler aynı listeyi paylaşır.
 using System.Collections.Concurrent;
 using LogiTechAPI.Observer;
 
@@ -5,12 +8,15 @@ namespace LogiTechAPI.Services
 {
     public class ObserverRegistry
     {
+        // TrackingNo → o gönderiye abone observer'lar.
+        // ConcurrentDictionary: eşzamanlı Add/Remove güvenliği.
         private readonly ConcurrentDictionary<string, List<IShipmentObserver>> _observers = new();
 
         public void Add(string trackingNo, IShipmentObserver observer)
         {
+            // GetOrAdd atomik: anahtar yoksa yeni liste yarat, varsa mevcutu dön
             var list = _observers.GetOrAdd(trackingNo, _ => new List<IShipmentObserver>());
-            lock (list)
+            lock (list)                                  // List<T> thread-safe değil
             {
                 list.Add(observer);
             }
@@ -20,6 +26,7 @@ namespace LogiTechAPI.Services
         {
             if (!_observers.TryGetValue(trackingNo, out var list)) return;
 
+            // Snapshot pattern — kilidi kısa tut: kopyala bırak, çağrıları lock dışında yap
             IShipmentObserver[] snapshot;
             lock (list)
             {
@@ -27,12 +34,12 @@ namespace LogiTechAPI.Services
             }
 
             foreach (var observer in snapshot)
-                observer.Update(message, status);
+                observer.Update(message, status);        // Concrete observer (Email/Notification) çağrılır
         }
 
         public void Remove(string trackingNo)
         {
-            _observers.TryRemove(trackingNo, out _);
+            _observers.TryRemove(trackingNo, out _);     // Anahtar yoksa hata vermeden geç
         }
     }
 }

@@ -1,3 +1,6 @@
+// Concrete Command — gönderinin durumunu (Status) bir adım ilerletir.
+// State pattern fabrikası ile yeni durum nesnesi alır, Observer'larla bildirim
+// gönderir. Undo: status'u eski değere döndürür + history satırını siler.
 using LogiTechAPI.Models;
 using LogiTechAPI.Observer;
 using LogiTechAPI.Services;
@@ -13,8 +16,8 @@ namespace LogiTechAPI.Command
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly string _trackingNo;
         private readonly string _newStatus;
-        private string? _oldStatus;
-        private int? _addedHistoryId;
+        private string? _oldStatus;                       // Undo için: Execute öncesi durum
+        private int? _addedHistoryId;                     // Undo için: silinecek history satırı
 
         public string KomutAdi => "Update Status";
 
@@ -27,6 +30,7 @@ namespace LogiTechAPI.Command
 
         public async Task<KomutSonuc> Execute()
         {
+            // Taze DI scope — DbContext fresh olsun
             using var scope = _scopeFactory.CreateScope();
             var gonderiService = scope.ServiceProvider.GetRequiredService<GonderiService>();
             var emailSettings = scope.ServiceProvider.GetRequiredService<IOptions<EmailSettings>>().Value;
@@ -34,8 +38,9 @@ namespace LogiTechAPI.Command
             var shipment = await gonderiService.GetByTrackingNo(_trackingNo);
             if (shipment == null) return new KomutSonuc { Basarili = false, Mesaj = "Shipment not found!" };
 
-            _oldStatus = shipment.Status;
+            _oldStatus = shipment.Status;                 // Undo'da gerekecek
 
+            // STATE — yeni durum nesnesini fabrikadan al
             IGonderiDurum statusObject = GonderiDurumFactory.GetStatus(_newStatus);
 
             shipment.Status = statusObject.StatusName;
@@ -47,9 +52,7 @@ namespace LogiTechAPI.Command
             };
             shipment.StatusHistory.Add(newHistory);
 
-            // Observer'ları taze kaydet — backend restart sonrası Singleton
-            // ObserverRegistry boşalmış olabilir, bu yüzden her status değişiminde
-            // observer listesini gönderici bilgisinden yeniden inşa ediyoruz.
+            // OBSERVER — kullanıcı için observer'ları taze kur (restart sonrası registry boş olabilir)
             gonderiService.RemoveObservers(_trackingNo);
             gonderiService.AddObserver(_trackingNo, new NotificationObserver());
             if (!string.IsNullOrWhiteSpace(shipment.SenderEmail))
@@ -57,15 +60,16 @@ namespace LogiTechAPI.Command
                 gonderiService.AddObserver(_trackingNo, new EmailObserver(shipment.SenderEmail, _trackingNo, emailSettings));
             }
 
+            // Subject → tüm observer'lara haber: log düşer, e-posta gider
             gonderiService.NotifyObservers(_trackingNo, $"Status updated from {_oldStatus} to {statusObject.StatusName}", statusObject.StatusName);
 
             await gonderiService.UpdateShipment(shipment);
-
-            _addedHistoryId = newHistory.Id;
+            _addedHistoryId = newHistory.Id;              // SaveChanges sonrası ID dolar
 
             return new KomutSonuc { Basarili = true, Mesaj = $"Status successfully updated to {statusObject.StatusName}." };
         }
 
+        // Undo — status'u eskiye çevir + history satırını sil (sanki olay hiç olmamış gibi)
         public async Task<KomutSonuc> Undo()
         {
             if (_oldStatus == null)
@@ -74,6 +78,7 @@ namespace LogiTechAPI.Command
             using var scope = _scopeFactory.CreateScope();
             var gonderiService = scope.ServiceProvider.GetRequiredService<GonderiService>();
 
+            // Tek transaction: hem status revert hem history delete
             var ok = await gonderiService.RevertStatus(_trackingNo, _oldStatus, _addedHistoryId);
             if (!ok)
                 return new KomutSonuc { Basarili = false, Mesaj = "Shipment not found!" };

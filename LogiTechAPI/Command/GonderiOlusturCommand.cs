@@ -1,3 +1,6 @@
+// Concrete Command — yeni kargo oluşturma. Projenin EN KARMAŞIK komutu;
+// içinde 5 pattern bir araya gelir: Factory + Decorator + Strategy + Observer + State.
+// Undo: oluşturulan kargoyu DB'den siler. Redo: Execute tekrar çağrılır.
 using LogiTechAPI.Models;
 using LogiTechAPI.Factory;
 using LogiTechAPI.Decorator;
@@ -12,13 +15,14 @@ namespace LogiTechAPI.Command
 {
     public class GonderiOlusturCommand : IKargoCommand
     {
+        // ScopeFactory: Komut Singleton stack'te yaşar ama her çalışmada TAZE DbContext gerekir
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly PaketFactory _factory;             // Singleton — direkt tutmak güvenli
         private readonly ShipmentRequest _request;
         private readonly int _userId;
         private readonly User _user;
         private readonly EmailSettings _emailSettings;
-        private Gonderi? _createdShipment;
+        private Gonderi? _createdShipment;                  // Undo/Redo için — oluşturulan kargonun snapshot'ı
 
         public string KomutAdi => "Create Shipment";
 
@@ -45,10 +49,10 @@ namespace LogiTechAPI.Command
                 using var scope = _scopeFactory.CreateScope();
                 var gonderiService = scope.ServiceProvider.GetRequiredService<GonderiService>();
 
-                // REDO durumu: Undo'da silinen gönderiyi aynı TrackingNo ile geri yükle.
+                // REDO yolu: daha önce oluşturulup Undo'da silinen kargoyu aynı TrackingNo ile geri yükle
                 if (_createdShipment != null)
                 {
-                    _createdShipment.Id = 0;
+                    _createdShipment.Id = 0;                                        // PK çakışmasın diye sıfırla
                     foreach (var h in _createdShipment.StatusHistory) h.Id = 0;
 
                     gonderiService.AddObserver(_createdShipment.TrackingNo, new NotificationObserver());
@@ -69,10 +73,10 @@ namespace LogiTechAPI.Command
                     return new KomutSonuc { Basarili = true, Mesaj = "Shipment re-created!", Gonderi = _createdShipment };
                 }
 
-                // 1. Factory
+                // 1. FACTORY — string → IPaket somut nesnesi
                 IPaket paket = _factory.CreatePackage(_request.PackageType);
 
-                // 2. Decorator
+                // 2. DECORATOR — istenen ek hizmetler paketi sırayla sarmalar (zincir)
                 if (_request.Extras != null)
                 {
                     foreach (var extra in _request.Extras)
@@ -82,13 +86,13 @@ namespace LogiTechAPI.Command
                     }
                 }
 
-                // 3. Strategy
+                // 3. STRATEGY — taşıma yöntemine göre ek maliyet hesabı
                 ITransportStrategy strategy = TransportStrategyFactory.GetStrategy(_request.TransportMethod);
-                decimal basePrice = paket.CalculatePrice();
+                decimal basePrice = paket.CalculatePrice();                         // Decorator zinciri sonrası fiyat
                 decimal extraCost = strategy.CalculateExtraCost(basePrice);
                 decimal finalPrice = basePrice + extraCost;
 
-                // 4. Model creation
+                // 4. MODEL — DB'ye yazılacak Gonderi entity'si
                 var shipment = new Gonderi
                 {
                     UserId = _userId,
@@ -107,9 +111,8 @@ namespace LogiTechAPI.Command
                     Notes = _request.Notes ?? string.Empty
                 };
 
-                // 5. State & Observer
+                // 5. OBSERVER — bildirim gözlemcilerini kaydet (e-posta + log)
                 gonderiService.AddObserver(shipment.TrackingNo, new NotificationObserver());
-
                 if (!string.IsNullOrWhiteSpace(_user.Email))
                 {
                     gonderiService.AddObserver(
@@ -117,6 +120,7 @@ namespace LogiTechAPI.Command
                         new EmailObserver(_user.Email, shipment.TrackingNo, _emailSettings));
                 }
 
+                // 6. STATE — ilk durum atanır + history başlatılır
                 shipment.Status = "Order Received";
                 shipment.StatusHistory.Add(new StatusHistory
                 {
@@ -125,11 +129,11 @@ namespace LogiTechAPI.Command
                     Date = DateTime.UtcNow
                 });
 
-                // 6. Save
+                // 7. SAVE — DB'ye yaz, Undo için referansı sakla
                 await gonderiService.AddShipment(shipment);
                 _createdShipment = shipment;
 
-                // 7. Notify — kullanıcıya "kargon başarıyla oluşturuldu" maili gönder
+                // 8. NOTIFY — observer'ları tetikle (kullanıcıya mail gider)
                 gonderiService.NotifyObservers(
                     shipment.TrackingNo,
                     $"Your shipment {shipment.TrackingNo} has been created successfully. Total: ₺{shipment.TotalPrice}.",
@@ -144,6 +148,7 @@ namespace LogiTechAPI.Command
             }
         }
 
+        // Undo — oluşturulmuş gönderiyi sil, observer'ları temizle
         public async Task<KomutSonuc> Undo()
         {
             if (_createdShipment == null)
@@ -152,7 +157,7 @@ namespace LogiTechAPI.Command
             using var scope = _scopeFactory.CreateScope();
             var gonderiService = scope.ServiceProvider.GetRequiredService<GonderiService>();
 
-            gonderiService.RemoveObservers(_createdShipment.TrackingNo);
+            gonderiService.RemoveObservers(_createdShipment.TrackingNo);            // Redo'da çift kayıt olmasın
             await gonderiService.DeleteShipment(_createdShipment.TrackingNo);
             return new KomutSonuc { Basarili = true, Mesaj = "Shipment creation undone!" };
         }
