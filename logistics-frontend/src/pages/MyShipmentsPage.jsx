@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import "./GonderilerimPage.css";
+import "./MyShipmentsPage.css";
 
 const API = "http://localhost:5085/api/cargo";
 
-export default function GonderilerimPage() {
+export default function MyShipmentsPage() {
   const [gonderiler, setGonderiler] = useState([]);
   const [loading, setLoading] = useState(true);
   const [historyStatus, setHistoryStatus] = useState({ canUndo: false, canRedo: false });

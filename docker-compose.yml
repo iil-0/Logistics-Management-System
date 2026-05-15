@@ -7,7 +7,7 @@ services:
       - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
 
   frontend:
-    build: ./lojistik-frontend
+    build: ./logistics-frontend
     ports:
       - "5173:80"
     depends_on:

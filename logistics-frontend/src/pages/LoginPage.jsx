@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import "./GirisPage.css";
+import "./LoginPage.css";
 
-export default function GirisPage() {
+export default function LoginPage() {
   const { giris, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();

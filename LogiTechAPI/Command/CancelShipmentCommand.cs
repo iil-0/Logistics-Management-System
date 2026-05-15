@@ -10,34 +10,34 @@ using Microsoft.Extensions.Options;
 
 namespace LogiTechAPI.Command
 {
-    public class GonderiIptalCommand : IKargoCommand
+    public class CancelShipmentCommand : ICargoCommand
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly string _trackingNo;
         private bool _executed;                          // Undo guard: Execute çağrılmadıysa Undo anlamsız
         private int? _addedHistoryId;                    // Silinecek "Cancelled" history satırı
 
-        public string KomutAdi => "Cancel Shipment";
+        public string CommandName => "Cancel Shipment";
 
-        public GonderiIptalCommand(IServiceScopeFactory scopeFactory, string trackingNo)
+        public CancelShipmentCommand(IServiceScopeFactory scopeFactory, string trackingNo)
         {
             _scopeFactory = scopeFactory;
             _trackingNo = trackingNo;
         }
 
-        public async Task<KomutSonuc> Execute()
+        public async Task<CommandResult> Execute()
         {
             using var scope = _scopeFactory.CreateScope();
-            var gonderiService = scope.ServiceProvider.GetRequiredService<GonderiService>();
+            var shipmentService = scope.ServiceProvider.GetRequiredService<ShipmentService>();
             var emailSettings = scope.ServiceProvider.GetRequiredService<IOptions<EmailSettings>>().Value;
 
-            var shipment = await gonderiService.GetByTrackingNo(_trackingNo);
-            if (shipment == null) return new KomutSonuc { Basarili = false, Mesaj = "Shipment not found!" };
+            var shipment = await shipmentService.GetByTrackingNo(_trackingNo);
+            if (shipment == null) return new CommandResult { Success = false, Message = "Shipment not found!" };
 
             // İŞ KURALI — State pattern'in IsCancellable() davranışıyla aynı
             if (!string.Equals(shipment.Status, "Order Received", StringComparison.OrdinalIgnoreCase))
             {
-                return new KomutSonuc { Basarili = false, Mesaj = $"Only shipments in 'Order Received' state can be cancelled. Current status is: {shipment.Status}" };
+                return new CommandResult { Success = false, Message = $"Only shipments in 'Order Received' state can be cancelled. Current status is: {shipment.Status}" };
             }
 
             shipment.Status = "Cancelled";
@@ -50,36 +50,36 @@ namespace LogiTechAPI.Command
             shipment.StatusHistory.Add(history);
 
             // OBSERVER — kullanıcıya iptal bildirimi gitsin
-            gonderiService.RemoveObservers(_trackingNo);
-            gonderiService.AddObserver(_trackingNo, new NotificationObserver());
+            shipmentService.RemoveObservers(_trackingNo);
+            shipmentService.AddObserver(_trackingNo, new NotificationObserver());
             if (!string.IsNullOrWhiteSpace(shipment.SenderEmail))
             {
-                gonderiService.AddObserver(_trackingNo, new EmailObserver(shipment.SenderEmail, _trackingNo, emailSettings));
+                shipmentService.AddObserver(_trackingNo, new EmailObserver(shipment.SenderEmail, _trackingNo, emailSettings));
             }
-            gonderiService.NotifyObservers(_trackingNo, "Your shipment has been cancelled.", "Cancelled");
+            shipmentService.NotifyObservers(_trackingNo, "Your shipment has been cancelled.", "Cancelled");
 
-            await gonderiService.UpdateShipment(shipment);
+            await shipmentService.UpdateShipment(shipment);
 
             _addedHistoryId = history.Id;
             _executed = true;
 
-            return new KomutSonuc { Basarili = true, Mesaj = "Shipment cancelled successfully." };
+            return new CommandResult { Success = true, Message = "Shipment cancelled successfully." };
         }
 
         // Undo — iptali geri al: status "Order Received"a döner, "Cancelled" history silinir
-        public async Task<KomutSonuc> Undo()
+        public async Task<CommandResult> Undo()
         {
             if (!_executed)
-                return new KomutSonuc { Basarili = false, Mesaj = "Nothing to undo!" };
+                return new CommandResult { Success = false, Message = "Nothing to undo!" };
 
             using var scope = _scopeFactory.CreateScope();
-            var gonderiService = scope.ServiceProvider.GetRequiredService<GonderiService>();
+            var shipmentService = scope.ServiceProvider.GetRequiredService<ShipmentService>();
 
-            var ok = await gonderiService.RevertStatus(_trackingNo, "Order Received", _addedHistoryId);
+            var ok = await shipmentService.RevertStatus(_trackingNo, "Order Received", _addedHistoryId);
             if (!ok)
-                return new KomutSonuc { Basarili = false, Mesaj = "Shipment not found!" };
+                return new CommandResult { Success = false, Message = "Shipment not found!" };
 
-            return new KomutSonuc { Basarili = true, Mesaj = "Cancellation undone!" };
+            return new CommandResult { Success = true, Message = "Cancellation undone!" };
         }
     }
 }

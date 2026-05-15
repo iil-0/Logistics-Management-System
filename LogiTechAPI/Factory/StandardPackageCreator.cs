@@ -2,8 +2,8 @@
 // "new StandardPackage()" yalnızca burada geçer; sistem değişirse tek yer.
 namespace LogiTechAPI.Factory
 {
-    public class StandardPackageCreator : IPaketCreator
+    public class StandardPackageCreator : IPackageCreator
     {
-        public IPaket CreatePackage() => new StandardPackage();
+        public IPackage CreatePackage() => new StandardPackage();
     }
 }

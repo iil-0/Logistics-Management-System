@@ -19,28 +19,28 @@ namespace LogiTechAPI.Controllers
 {
     [ApiController]
     [Route("api/cargo")]
-    public class KargoController : ControllerBase
+    public class CargoController : ControllerBase
     {
         // Tüm bağımlılıklar DI ile yapıcıya enjekte edilir
-        private readonly PaketFactory _factory;                 // Factory: paket üretimi
-        private readonly GonderiService _gonderiService;        // RECEIVER + sorgu işleri
+        private readonly PackageFactory _factory;                // Factory: paket üretimi
+        private readonly ShipmentService _shipmentService;       // RECEIVER + sorgu işleri
         private readonly UserService _userService;
-        private readonly ILogger<KargoController> _logger;
+        private readonly ILogger<CargoController> _logger;
         private readonly EmailSettings _emailSettings;
-        private readonly KargoCommandInvoker _invoker;          // INVOKER (Singleton — per-user undo stack)
-        private readonly IServiceScopeFactory _scopeFactory;    // Komutlara TAZE scope açtırır (captive dep önlemi)
+        private readonly CargoCommandInvoker _invoker;           // INVOKER (Singleton — per-user undo stack)
+        private readonly IServiceScopeFactory _scopeFactory;     // Komutlara TAZE scope açtırır (captive dep önlemi)
 
-        public KargoController(
-            PaketFactory factory,
-            GonderiService gonderiService,
+        public CargoController(
+            PackageFactory factory,
+            ShipmentService shipmentService,
             UserService userService,
-            ILogger<KargoController> logger,
+            ILogger<CargoController> logger,
             IOptions<EmailSettings> emailSettings,
-            KargoCommandInvoker invoker,
+            CargoCommandInvoker invoker,
             IServiceScopeFactory scopeFactory)
         {
             _factory = factory;
-            _gonderiService = gonderiService;
+            _shipmentService = shipmentService;
             _userService = userService;
             _logger = logger;
             _emailSettings = emailSettings.Value;
@@ -65,14 +65,14 @@ namespace LogiTechAPI.Controllers
                 return Unauthorized(new { message = "User not found." });
 
             // CLIENT — komutu yarat, Invoker'a teslim et. Invoker bunu undo stack'ine koyar.
-            var command = new GonderiOlusturCommand(
+            var command = new CreateShipmentCommand(
                 _scopeFactory, _factory, request, userId.Value, user, _emailSettings);
             var result = await _invoker.ExecuteCommand(userId.Value, command);
 
-            if (!result.Basarili)
-                return BadRequest(new { message = result.Mesaj });
+            if (!result.Success)
+                return BadRequest(new { message = result.Message });
 
-            return Ok(MapShipmentResponse((Gonderi)result.Gonderi!));
+            return Ok(MapShipmentResponse((Shipment)result.Shipment!));
         }
 
         // GET /api/cargo/my-shipments — Kullanıcının kendi kargoları
@@ -84,7 +84,7 @@ namespace LogiTechAPI.Controllers
             if (userId == null)
                 return Unauthorized(new { message = "Session not found." });
 
-            var shipments = await _gonderiService.GetUserShipments(userId.Value);
+            var shipments = await _shipmentService.GetUserShipments(userId.Value);
             return Ok(shipments.Select(MapShipmentResponse).ToList());
         }
 
@@ -93,7 +93,7 @@ namespace LogiTechAPI.Controllers
         [HttpGet("all-shipments")]
         public async Task<IActionResult> AllShipments()
         {
-            var shipments = await _gonderiService.GetAllShipments();
+            var shipments = await _shipmentService.GetAllShipments();
             return Ok(shipments.Select(MapShipmentResponse).ToList());
         }
 
@@ -101,7 +101,7 @@ namespace LogiTechAPI.Controllers
         [HttpGet("track/{trackingNo}")]
         public async Task<IActionResult> Track(string trackingNo)
         {
-            var shipment = await _gonderiService.GetByTrackingNo(trackingNo);
+            var shipment = await _shipmentService.GetByTrackingNo(trackingNo);
             if (shipment == null)
                 return NotFound(new { message = "Shipment not found with this tracking number." });
 
@@ -117,14 +117,14 @@ namespace LogiTechAPI.Controllers
             if (userId == null)
                 return Unauthorized(new { message = "Session not found." });
 
-            // CLIENT — DurumGuncelleCommand'ı invoker'a ver
-            var command = new DurumGuncelleCommand(_scopeFactory, trackingNo, nextStatus);
+            // CLIENT — UpdateStatusCommand'ı invoker'a ver
+            var command = new UpdateStatusCommand(_scopeFactory, trackingNo, nextStatus);
             var result = await _invoker.ExecuteCommand(userId.Value, command);
 
-            if (!result.Basarili)
-                return BadRequest(new { message = result.Mesaj });
+            if (!result.Success)
+                return BadRequest(new { message = result.Message });
 
-            var shipment = await _gonderiService.GetByTrackingNo(trackingNo);
+            var shipment = await _shipmentService.GetByTrackingNo(trackingNo);
             return Ok(MapShipmentResponse(shipment!));
         }
 
@@ -133,7 +133,7 @@ namespace LogiTechAPI.Controllers
         [HttpPost("cancel/{trackingNo}")]
         public async Task<IActionResult> CancelShipment(string trackingNo)
         {
-            var shipment = await _gonderiService.GetByTrackingNo(trackingNo);
+            var shipment = await _shipmentService.GetByTrackingNo(trackingNo);
             if (shipment == null)
                 return NotFound(new { message = "Shipment not found." });
 
@@ -147,13 +147,13 @@ namespace LogiTechAPI.Controllers
                 return Forbid();
 
             // CLIENT — iptal komutunu invoker'a ver
-            var command = new GonderiIptalCommand(_scopeFactory, trackingNo);
+            var command = new CancelShipmentCommand(_scopeFactory, trackingNo);
             var result = await _invoker.ExecuteCommand(userId.Value, command);
 
-            if (!result.Basarili)
-                return BadRequest(new { message = result.Mesaj });
+            if (!result.Success)
+                return BadRequest(new { message = result.Message });
 
-            var updatedShipment = await _gonderiService.GetByTrackingNo(trackingNo);
+            var updatedShipment = await _shipmentService.GetByTrackingNo(trackingNo);
             return Ok(MapShipmentResponse(updatedShipment!));
         }
 
@@ -167,10 +167,10 @@ namespace LogiTechAPI.Controllers
                 return Unauthorized(new { message = "Session not found." });
 
             var result = await _invoker.UndoLastCommand(userId.Value);
-            if (!result.Basarili)
-                return BadRequest(new { message = result.Mesaj });
+            if (!result.Success)
+                return BadRequest(new { message = result.Message });
 
-            return Ok(new { message = result.Mesaj });
+            return Ok(new { message = result.Message });
         }
 
         // POST /api/cargo/redo — Undo edileni yeniden uygula
@@ -183,10 +183,10 @@ namespace LogiTechAPI.Controllers
                 return Unauthorized(new { message = "Session not found." });
 
             var result = await _invoker.RedoLastCommand(userId.Value);
-            if (!result.Basarili)
-                return BadRequest(new { message = result.Mesaj });
+            if (!result.Success)
+                return BadRequest(new { message = result.Message });
 
-            return Ok(new { message = result.Mesaj });
+            return Ok(new { message = result.Message });
         }
 
         // GET /api/cargo/history-status — Frontend butonları için canUndo/canRedo
@@ -217,9 +217,9 @@ namespace LogiTechAPI.Controllers
         }
 
         // Entity → DTO. IsCancellable State pattern üzerinden anlık hesaplanır.
-        private static ShipmentResponse MapShipmentResponse(Gonderi g)
+        private static ShipmentResponse MapShipmentResponse(Shipment g)
         {
-            var currentStatus = GonderiDurumFactory.GetStatus(g.Status);    // STATE pattern köprüsü
+            var currentStatus = ShipmentStatusFactory.GetStatus(g.Status);  // STATE pattern köprüsü
             return new ShipmentResponse
             {
                 Id = g.Id,

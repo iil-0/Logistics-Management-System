@@ -1,5 +1,5 @@
 // Kargo iş mantığı servisi. Command pattern'de RECEIVER rolü — komutlar
-// (Olustur/DurumGuncelle/Iptal) işi buraya delege eder. Ayrıca Observer
+// (CreateShipment/UpdateStatus/CancelShipment) işi buraya delege eder. Ayrıca Observer
 // pattern'in Subject'ine (ObserverRegistry) ince bir Facade cephesi sunar.
 using LogiTechAPI.Data;
 using LogiTechAPI.Models;
@@ -8,26 +8,26 @@ using LogiTechAPI.Observer;
 
 namespace LogiTechAPI.Services
 {
-    public class GonderiService
+    public class ShipmentService
     {
         private readonly AppDbContext _context;          // EF Core DbContext (Scoped)
         private readonly ObserverRegistry _registry;     // Observer Subject (Singleton)
 
-        public GonderiService(AppDbContext context, ObserverRegistry registry)
+        public ShipmentService(AppDbContext context, ObserverRegistry registry)
         {
             _context = context;
             _registry = registry;
         }
 
         // INSERT — yeni gönderi
-        public async Task AddShipment(Gonderi shipment)
+        public async Task AddShipment(Shipment shipment)
         {
             _context.Shipments.Add(shipment);
             await _context.SaveChangesAsync();
         }
 
         // UPDATE — değişiklikleri commit et
-        public async Task UpdateShipment(Gonderi shipment)
+        public async Task UpdateShipment(Shipment shipment)
         {
             _context.Shipments.Update(shipment);
             await _context.SaveChangesAsync();
@@ -54,7 +54,7 @@ namespace LogiTechAPI.Services
         }
 
         // SELECT TOP 1 ... WHERE TrackingNo = ?  (StatusHistory eager-loaded)
-        public async Task<Gonderi?> GetByTrackingNo(string trackingNo)
+        public async Task<Shipment?> GetByTrackingNo(string trackingNo)
         {
             return await _context.Shipments
                 .Include(g => g.StatusHistory)          // JOIN ile alt tablo da gelir
@@ -73,7 +73,7 @@ namespace LogiTechAPI.Services
         }
 
         // Kullanıcının kendi kargoları (en yeniden eskiye)
-        public async Task<List<Gonderi>> GetUserShipments(int userId)
+        public async Task<List<Shipment>> GetUserShipments(int userId)
         {
             return await _context.Shipments
                 .Where(g => g.UserId == userId)
@@ -83,7 +83,7 @@ namespace LogiTechAPI.Services
         }
 
         // Admin için tüm kargolar
-        public async Task<List<Gonderi>> GetAllShipments()
+        public async Task<List<Shipment>> GetAllShipments()
         {
             return await _context.Shipments
                 .Include(g => g.StatusHistory)

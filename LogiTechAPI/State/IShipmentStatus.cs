@@ -3,11 +3,11 @@
 // adını, açıklamasını, sonraki durumu ve iptal kuralını BİLİR.
 namespace LogiTechAPI.State
 {
-    public interface IGonderiDurum
+    public interface IShipmentStatus
     {
         string StatusName { get; }            // İnsan okur durum adı (DB'de saklanan değer)
         string Description { get; }           // Bildirim/UI için açıklama
-        IGonderiDurum? NextStatus();          // FSM geçişi — terminal durumda null
+        IShipmentStatus? NextStatus();        // FSM geçişi — terminal durumda null
         bool IsCancellable();                 // İptal edilebilir mi? (sadece "Order Received" için true)
     }
 }

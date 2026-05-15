@@ -1,8 +1,8 @@
 // Concrete Creator — HeavyLoad paket üretmekten sorumlu.
 namespace LogiTechAPI.Factory
 {
-    public class HeavyLoadPackageCreator : IPaketCreator
+    public class HeavyLoadPackageCreator : IPackageCreator
     {
-        public IPaket CreatePackage() => new HeavyLoadPackage();
+        public IPackage CreatePackage() => new HeavyLoadPackage();
     }
 }

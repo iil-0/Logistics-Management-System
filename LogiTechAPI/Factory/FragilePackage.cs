@@ -2,7 +2,7 @@
 // Ekstra paketleme maliyeti yansıtılır.
 namespace LogiTechAPI.Factory
 {
-    public class FragilePackage : IPaket
+    public class FragilePackage : IPackage
     {
         public string Name => "Fragile";
         public decimal CalculatePrice() => 120m;

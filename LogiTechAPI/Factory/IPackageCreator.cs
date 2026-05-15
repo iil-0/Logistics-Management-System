@@ -1,10 +1,10 @@
-// Factory Method pattern — abstract Creator (üretici) sözleşmesi.
+// Factory Method pattern — Creator interface'i.
 // Her concrete creator yalnızca KENDİ paket türünü üretmeyi bilir.
 // Üretim sorumluluğu fabrika class'ından çıkıp her bir creator'a dağıtılır.
 namespace LogiTechAPI.Factory
 {
-    public interface IPaketCreator
+    public interface IPackageCreator
     {
-        IPaket CreatePackage();           // Factory Method — concrete creator override eder
+        IPackage CreatePackage(); // Factory Method — concrete creator override eder
     }
 }

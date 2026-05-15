@@ -1,6 +1,6 @@
 // /api/auth altındaki kimlik doğrulama endpoint'leri.
 // Cookie-based auth + Claims kullanır. Pattern içermez — düz katmanlı mimari.
-// Diğer Controller (KargoController) tasarım desenlerini orkestral eder.
+// Diğer Controller (CargoController) tasarım desenlerini orkestral eder.
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;

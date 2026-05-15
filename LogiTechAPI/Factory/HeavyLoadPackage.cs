@@ -2,7 +2,7 @@
 // En pahalı baz fiyat: forklift, palet, özel araç gerektirir.
 namespace LogiTechAPI.Factory
 {
-    public class HeavyLoadPackage : IPaket
+    public class HeavyLoadPackage : IPackage
     {
         public string Name => "HeavyLoad";
         public decimal CalculatePrice() => 250m;

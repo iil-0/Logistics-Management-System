@@ -23,7 +23,7 @@ namespace LogiTechAPI.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("LogiTechAPI.Models.Gonderi", b =>
+            modelBuilder.Entity("LogiTechAPI.Models.Shipment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -168,13 +168,13 @@ namespace LogiTechAPI.Data.Migrations
 
             modelBuilder.Entity("LogiTechAPI.Models.StatusHistory", b =>
                 {
-                    b.HasOne("LogiTechAPI.Models.Gonderi", null)
+                    b.HasOne("LogiTechAPI.Models.Shipment", null)
                         .WithMany("StatusHistory")
                         .HasForeignKey("GonderiId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("LogiTechAPI.Models.Gonderi", b =>
+            modelBuilder.Entity("LogiTechAPI.Models.Shipment", b =>
                 {
                     b.Navigation("StatusHistory");
                 });

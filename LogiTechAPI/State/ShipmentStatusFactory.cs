@@ -1,11 +1,11 @@
 // DB ile State pattern arasındaki köprü. DB'de Status string olarak saklanır;
-// bu factory string'i alıp uygun IGonderiDurum nesnesine çevirir.
-// Command'lar (DurumGuncelle, GonderiIptal) ve Controller (IsCancellable flag'i) kullanır.
+// bu factory string'i alıp uygun IShipmentStatus nesnesine çevirir.
+// Command'lar (UpdateStatus, CancelShipment) ve Controller (IsCancellable flag'i) kullanır.
 namespace LogiTechAPI.State
 {
-    public static class GonderiDurumFactory
+    public static class ShipmentStatusFactory
     {
-        public static IGonderiDurum GetStatus(string statusName)
+        public static IShipmentStatus GetStatus(string statusName)
         {
             return statusName?.ToLower() switch
             {

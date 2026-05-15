@@ -1,6 +1,6 @@
 // Strateji seçici — frontend'den gelen string'i ITransportStrategy somut nesnesine
 // çevirir. Strategy + Factory pattern birlikte: hangi algoritmayı seçeceğimizi
-// tek noktada karar verir, GonderiOlusturCommand bu nesneyi kullanır.
+// tek noktada karar verir, CreateShipmentCommand bu nesneyi kullanır.
 namespace LogiTechAPI.Strategy
 {
     public static class TransportStrategyFactory

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import "./GonderiPage.css";
+import "./CreateShipmentPage.css";
 
 const API = "http://localhost:5085/api/cargo";
 
@@ -21,7 +21,7 @@ const TASIMA_YOLLARI = [
   { value: "Denizyolu", label: "🚢 Seaway", desc: "7-14 business days", extra: "+10%", tag: "Economic" },
 ];
 
-export default function GonderiPage() {
+export default function CreateShipmentPage() {
   const { user } = useAuth();
   const [form, setForm] = useState({
     aliciAd: "", aliciAdres: "", aliciTelefon: "", aliciSehir: "",

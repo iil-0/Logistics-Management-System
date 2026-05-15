@@ -1,11 +1,11 @@
 // Command pattern'in INVOKER'ı. Komutları çalıştırır ve undo/redo geçmişini tutar.
-// Hangi komutu çalıştırdığını BİLMEZ; sadece IKargoCommand sözleşmesi üzerinden konuşur.
+// Hangi komutu çalıştırdığını BİLMEZ; sadece ICargoCommand sözleşmesi üzerinden konuşur.
 // Singleton — DI'da AddSingleton ile kayıtlı (Program.cs).
 using System.Collections.Concurrent;
 
 namespace LogiTechAPI.Command
 {
-    public class KargoCommandInvoker
+    public class CargoCommandInvoker
     {
         // Her kullanıcı için ayrı undo/redo stack — A kullanıcısı B'nin işlemini undo edemez.
         // ConcurrentDictionary + lock ile thread-safe (Singleton paylaşılan state).
@@ -13,18 +13,18 @@ namespace LogiTechAPI.Command
 
         private class UserHistory
         {
-            public Stack<IKargoCommand> UndoStack { get; } = new();   // LIFO: son komut ilk geri alınır
-            public Stack<IKargoCommand> RedoStack { get; } = new();   // Undo edilen komutlar buraya itilir
+            public Stack<ICargoCommand> UndoStack { get; } = new();   // LIFO: son komut ilk geri alınır
+            public Stack<ICargoCommand> RedoStack { get; } = new();   // Undo edilen komutlar buraya itilir
             public object Lock { get; } = new();
         }
 
         private UserHistory GetHistory(int userId)
             => _histories.GetOrAdd(userId, _ => new UserHistory());
 
-        public async Task<KomutSonuc> ExecuteCommand(int userId, IKargoCommand command)
+        public async Task<CommandResult> ExecuteCommand(int userId, ICargoCommand command)
         {
             var result = await command.Execute();
-            if (result.Basarili)
+            if (result.Success)
             {
                 var history = GetHistory(userId);
                 lock (history.Lock)
@@ -36,28 +36,28 @@ namespace LogiTechAPI.Command
             return result;
         }
 
-        public async Task<KomutSonuc> UndoLastCommand(int userId)
+        public async Task<CommandResult> UndoLastCommand(int userId)
         {
             var history = GetHistory(userId);
-            IKargoCommand command;
+            ICargoCommand command;
             lock (history.Lock)
             {
                 if (history.UndoStack.Count == 0)
-                    return new KomutSonuc { Basarili = false, Mesaj = "Geri alınacak işlem yok." };
+                    return new CommandResult { Success = false, Message = "Geri alınacak işlem yok." };
                 command = history.UndoStack.Pop();
                 history.RedoStack.Push(command);  // Redo için sakla
             }
             return await command.Undo();          // Lock dışında çağrı — DB IO'yu kilitle bloklama
         }
 
-        public async Task<KomutSonuc> RedoLastCommand(int userId)
+        public async Task<CommandResult> RedoLastCommand(int userId)
         {
             var history = GetHistory(userId);
-            IKargoCommand command;
+            ICargoCommand command;
             lock (history.Lock)
             {
                 if (history.RedoStack.Count == 0)
-                    return new KomutSonuc { Basarili = false, Mesaj = "Yapılacak yeniden işlem yok." };
+                    return new CommandResult { Success = false, Message = "Yapılacak yeniden işlem yok." };
                 command = history.RedoStack.Pop();
                 history.UndoStack.Push(command);  // Tekrar undo edilebilir hale getir
             }

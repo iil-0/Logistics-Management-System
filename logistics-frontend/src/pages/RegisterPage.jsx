@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import "./GirisPage.css";
+import "./LoginPage.css";
 
-export default function KayitPage() {
+export default function RegisterPage() {
   const { user, kayit } = useAuth();
   const navigate = useNavigate();
   

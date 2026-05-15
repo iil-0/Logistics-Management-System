@@ -3,11 +3,11 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
 import HomePage from "./pages/HomePage";
-import GirisPage from "./pages/GirisPage";
-import KayitPage from "./pages/KayitPage";
-import GonderiPage from "./pages/GonderiPage";
-import GonderilerimPage from "./pages/GonderilerimPage";
-import TakipPage from "./pages/TakipPage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import CreateShipmentPage from "./pages/CreateShipmentPage";
+import MyShipmentsPage from "./pages/MyShipmentsPage";
+import TrackPage from "./pages/TrackPage";
 import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
@@ -17,11 +17,11 @@ export default function App() {
       <main className="app-main">
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<GirisPage />} />
-          <Route path="/register" element={<KayitPage />} />
-          <Route path="/create-shipment" element={<ProtectedRoute><GonderiPage /></ProtectedRoute>} />
-          <Route path="/my-shipments" element={<ProtectedRoute><GonderilerimPage /></ProtectedRoute>} />
-          <Route path="/track" element={<TakipPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/create-shipment" element={<ProtectedRoute><CreateShipmentPage /></ProtectedRoute>} />
+          <Route path="/my-shipments" element={<ProtectedRoute><MyShipmentsPage /></ProtectedRoute>} />
+          <Route path="/track" element={<TrackPage />} />
           <Route path="/admin" element={<ProtectedRoute requireAdmin={true}><AdminDashboard /></ProtectedRoute>} />
 
           {/* Redirect old Turkish routes to new English routes */}

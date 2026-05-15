@@ -1,5 +1,5 @@
 // Uygulamanın giriş noktası. Tüm pattern'lerin orkestratörlerini DI'a kaydeder:
-// PaketFactory (Factory), ObserverRegistry (Observer Subject), KargoCommandInvoker
+// PackageFactory (Factory), ObserverRegistry (Observer Subject), CargoCommandInvoker
 // (Command Invoker). Cookie auth, CORS ve DB bağlantısı da burada kurulur.
 
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -15,11 +15,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ─── Pattern aktörleri DI'a kaydedilir ───────────────────────────────────────
 builder.Services.AddControllers();
-builder.Services.AddSingleton<PaketFactory>();              // Factory: tek örnek yeterli, durum yok
+builder.Services.AddSingleton<PackageFactory>();            // Factory: tek örnek yeterli, durum yok
 builder.Services.AddSingleton<ObserverRegistry>();          // Observer Subject: tüm istekler paylaşır
-builder.Services.AddSingleton<KargoCommandInvoker>();       // Command Invoker: per-user undo/redo stack
+builder.Services.AddSingleton<CargoCommandInvoker>();       // Command Invoker: per-user undo/redo stack
 builder.Services.AddScoped<UserService>();                  // Scoped: DbContext kullanıyor
-builder.Services.AddScoped<GonderiService>();               // Scoped: DbContext kullanıyor (Command Pattern'de RECEIVER)
+builder.Services.AddScoped<ShipmentService>();              // Scoped: DbContext kullanıyor (Command Pattern'de RECEIVER)
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
 builder.Services.AddDbContext<AppDbContext>(options =>

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import "./TakipPage.css";
+import "./TrackPage.css";
 
 const API = "http://localhost:5085/api/cargo";
 
-export default function TakipPage() {
+export default function TrackPage() {
   const [searchParams] = useSearchParams();
   const [takipNo, setTakipNo] = useState(searchParams.get("no") || "");
   const [result, setResult] = useState(null);

@@ -87,7 +87,7 @@ LogiTech/
 │   ├── Dockerfile                            (Container build definition for the API)
 │   └── appsettings.json                      (Local configuration; ignored by git)
 │
-├── lojistik-frontend/                        (Frontend source code)
+├── logistics-frontend/                       (Frontend source code)
 │   ├── src/
 │   │   ├── components/                       (Reusable UI components)
 │   │   ├── context/                          (Authentication context)
@@ -181,7 +181,7 @@ The API will be available at `http://localhost:5085`.
 In a new terminal:
 
 ```bash
-cd lojistik-frontend
+cd logistics-frontend
 npm install
 npm run dev
 ```

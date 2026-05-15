@@ -2,11 +2,11 @@
 // Tek iptal edilebilir durum (kargo henüz fiziksel olarak hareket etmedi).
 namespace LogiTechAPI.State
 {
-    public class OrderReceivedStatus : IGonderiDurum
+    public class OrderReceivedStatus : IShipmentStatus
     {
         public string StatusName => "Order Received";
         public string Description => "Your cargo order has been successfully registered.";
-        public IGonderiDurum? NextStatus() => new PreparingStatus();
+        public IShipmentStatus? NextStatus() => new PreparingStatus();
         public bool IsCancellable() => true;
     }
 }

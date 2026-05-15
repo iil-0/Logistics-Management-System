@@ -2,7 +2,7 @@ using LogiTechAPI.State;
 
 namespace LogiTechAPI.Models
 {
-    public class Gonderi
+    public class Shipment
     {
         public int Id { get; set; }
         public int UserId { get; set; }

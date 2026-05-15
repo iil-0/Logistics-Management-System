@@ -5,11 +5,11 @@
 // "hangi creator?" sorusunun cevabını verir, "ürünü nasıl yaratırım"ı değil.
 namespace LogiTechAPI.Factory
 {
-    public class PaketFactory
+    public class PackageFactory
     {
         // String → uygun Creator eşlemesi. Yeni paket türü eklemek için:
         // 1. Concrete Package yaz, 2. Concrete Creator yaz, 3. buraya bir satır ekle.
-        private readonly Dictionary<string, IPaketCreator> _creators = new()
+        private readonly Dictionary<string, IPackageCreator> _creators = new()
         {
             ["standard"]  = new StandardPackageCreator(),
             ["fragile"]   = new FragilePackageCreator(),
@@ -20,9 +20,9 @@ namespace LogiTechAPI.Factory
             ["agiryuk"]   = new HeavyLoadPackageCreator(),
         };
 
-        private readonly IPaketCreator _defaultCreator = new StandardPackageCreator();
+        private readonly IPackageCreator _defaultCreator = new StandardPackageCreator();
 
-        public IPaket CreatePackage(string packageType)
+        public IPackage CreatePackage(string packageType)
         {
             var key = packageType?.ToLower() ?? string.Empty;
             // Uygun creator bulunursa onun Factory Method'unu çağır;

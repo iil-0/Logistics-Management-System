@@ -25,7 +25,6 @@ namespace LogiTechAPI.Observer
         {
             if (!_observers.TryGetValue(trackingNo, out var list)) return;
 
-            // Snapshot pattern — kilidi kısa tut: kopyala bırak, çağrıları lock dışında yap
             IShipmentObserver[] snapshot;
             lock (list)
             {
