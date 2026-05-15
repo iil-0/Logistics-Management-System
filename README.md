@@ -17,6 +17,7 @@ When a user creates a shipment, the total price is computed dynamically based on
 - Support for multiple transport methods (Air, Land, Sea)
 - Optional extra services (Insurance, Fast Delivery)
 - Real email notifications dispatched via Gmail SMTP on each status change
+- Per-user undo and redo support for shipment commands
 - Modular API architecture organised around design patterns
 - Containerised deployment via Docker and Docker Compose
 
@@ -46,7 +47,7 @@ Governs the lifecycle of a shipment. A shipment may be in one of the following s
 
 ### 3.6 Command Pattern (Behavioural)
 
-Encapsulates user actions — such as creating a shipment or updating its status — as discrete command objects. This keeps the API controllers thin and provides a foundation for future extensions such as undo functionality or action logging.
+Encapsulates user actions — such as creating a shipment, updating its status, or cancelling a shipment — as discrete command objects (`CreateShipmentCommand`, `UpdateStatusCommand`, `CancelShipmentCommand`). Each command exposes both `Execute()` and `Undo()` methods. A singleton `CargoCommandInvoker` maintains per-user undo and redo stacks, allowing every user to reverse or reapply their last actions independently. Commands acquire fresh dependencies through `IServiceScopeFactory` to remain compatible with the scoped lifetime of the underlying `DbContext`.
 
 ## 4. Technical Stack
 
@@ -79,8 +80,8 @@ LogiTech/
 │   ├── DTOs/                                 (Request and response models)
 │   ├── Factory/                              (Factory pattern for package creation)
 │   ├── Models/                               (Database entities)
-│   ├── Observer/                             (Notification subsystem, including EmailObserver)
-│   ├── Services/                             (Business logic layer, includes the singleton ObserverRegistry)
+│   ├── Observer/                             (Notification subsystem: IShipmentObserver, EmailObserver, NotificationObserver, and the singleton ObserverRegistry subject)
+│   ├── Services/                             (Business logic layer: ShipmentService, UserService)
 │   ├── Settings/                             (Strongly-typed configuration models, e.g. EmailSettings)
 │   ├── State/                                (State pattern for shipment lifecycle)
 │   ├── Strategy/                             (Strategy pattern for transport methods)
@@ -202,6 +203,9 @@ The web application will be available at `http://localhost:5173`.
 | `/api/cargo/track/{trackingNo}`           | GET    | Returns the current status and full history of the specified shipment.      |
 | `/api/cargo/update-status/{trackingNo}`   | POST   | Advances a shipment to the next status (administrators only).               |
 | `/api/cargo/cancel/{trackingNo}`          | POST   | Cancels a shipment, provided it is still in the `Order Received` state.      |
+| `/api/cargo/undo`                         | POST   | Reverses the authenticated user's last successful shipment command.          |
+| `/api/cargo/redo`                         | POST   | Re-applies the authenticated user's most recently undone command.            |
+| `/api/cargo/history-status`               | GET    | Returns `canUndo` and `canRedo` flags for the authenticated user.            |
 | `/api/cargo/health`                       | GET    | Returns the current health status of the API.                                |
 
 ## 9. Security Considerations
@@ -218,4 +222,5 @@ The following points should be observed prior to any production deployment:
 
 - Configuration files containing secrets (`appsettings.json`, `.env`) are excluded from version control via `.gitignore`.
 - Each design pattern is implemented in a dedicated module for the sake of clarity and pedagogical value.
-- The `ObserverRegistry` is registered as a singleton in the dependency-injection container, while domain services such as `GonderiService` remain scoped to each HTTP request; this combination allows observer subscriptions to outlive individual requests without compromising request-level isolation of the database context.
+- The `ObserverRegistry` and `CargoCommandInvoker` are registered as singletons in the dependency-injection container, while domain services such as `ShipmentService` remain scoped to each HTTP request; this combination allows observer subscriptions and undo/redo history to outlive individual requests without compromising request-level isolation of the database context.
+- The `Shipment` entity preserves its original `GonderiId` foreign-key column name in the database (pinned via Fluent API) so that the rename to English class names does not require a database migration.
